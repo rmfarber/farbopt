@@ -1,0 +1,14 @@
+APP=pca_mpi_cuda
+GCC_FLAGS="-DUSE_LINEAR -O3 -fopenmp -std=c99 -w "
+FLAGS="-D MPI_NUM_COPROC_PER_NODE=2 -DUSE_LINEAR -DUSE_CUDA -w -O3 -Xcompiler -fopenmp -arch=compute_20 -use_fast_math "
+INC=" -I $HOME/install_cuda/include  -I /usr/include/mpich2"
+LIB=" -L $HOME/install_cuda/lib -L /usr/lib/mpich2 "
+
+gcc $GCC_FLAGS genData.c -o gen_$APP
+
+ln -s ../mpiTrain.c mpiTrain.cu
+nvcc $FLAGS mpiTrain.cu -I . $INC  $LIB -lnlopt -lm -lmpich -lmpl -o mpiTrain_$APP.cuda 
+rm mpiTrain.cu
+
+gcc $GCC_FLAGS ../pred.c -I . -lm -o pred_$APP
+

@@ -1,0 +1,9 @@
+for d in pca nlpca pca_multi nlpca_multi
+do
+   cd $d
+    bash SURVEY_HOST > survey.host.txt
+    bash SURVEY_NATIVE > survey.native.txt
+    bash SURVEY_OFFLOAD > survey.offload.txt
+   cd ..
+done
+

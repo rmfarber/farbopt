@@ -1,0 +1,22 @@
+APP=nlpca_mpi
+NUM_NODES=2
+EXAMPLES=`expr 30000000 / $NUM_NODES`
+VAR=0.1
+NUM_CLIENTS=`expr $NUM_NODES - 1`
+
+
+for i in `seq 0 $NUM_CLIENTS`
+do
+./gen_$APP $APP.train.dat.$i $EXAMPLES $VAR $i &
+done
+wait
+
+mpiexec -np $NUM_NODES ./mpiTrain_$APP.off $APP.train.dat $APP.param $APP.timing.txt
+
+./gen_$APP $APP.pred.dat 1000 0 1
+./pred_$APP $APP.param $APP.pred.dat > output.txt
+
+# create file for gnuplot
+tail -n +3 output.txt > plot.txt
+
+rm *.dat.*

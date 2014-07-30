@@ -1,0 +1,5 @@
+APP=$1
+FLAGS="-DUSE_LINEAR -c99 -O3 -Minline=myFunc "
+
+pgcc -Minfo -ta=nvidia,5.0,cc35,keepgpu -acc $FLAGS -I $APP -I /usr/local/cuda/include  timing.c -o $APP/timing.acc
+

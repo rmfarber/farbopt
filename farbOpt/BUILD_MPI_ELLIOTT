@@ -1,0 +1,24 @@
+APP=$1
+CC="/opt/intel/impi/4.1.0.027/intel64/bin/mpicc -cc=icc"
+FLAGS="-DUSE_ELLIOTT -std=gnu99 -O3 -openmp"
+#INC_FLAGS="-I $HOME/install/include -I /opt/intel/impi/4.1.0.027/intel64/include"
+#LIB_FLAGS="-L $HOME/install/lib -L /opt/intel/impi/4.1.0.027/intel64/lib"
+INC_FLAGS="-I $HOME/install/include"
+LIB_FLAGS="-L $HOME/install/lib"
+
+$CC $FLAGS mpiTrain.c -I $APP $INC_FLAGS  $LIB_FLAGS -lnlopt -o $APP/mpiTrain_$APP.off
+
+icc $FLAGS $APP/genData.c -o $APP/gen_$APP
+
+$CC $FLAGS -Wno-unknown-pragmas -no-offload -O3 mpiTrain.c -I $APP $INC_FLAGS $LIB_FLAGS \
+				-lnlopt -o $APP/mpiTrain_$APP.omp
+
+icc -I $APP $FLAGS -Wno-unknown-pragmas -no-offload pred.c -I $APP -o $APP/pred_$APP
+
+FLAGS+=" -mmic -Wno-unknown-pragmas"
+INC_FLAGS="-I $HOME/install_mic/include"
+LIB_FLAGS="-L $HOME/install_mic/lib"
+
+icc $FLAGS $APP/genData.c -o $APP/gen_$APP.mic
+$CC $FLAGS mpiTrain.c -I $APP $INC_FLAGS  $LIB_FLAGS -lnlopt -o $APP/mpiTrain_$APP.mic
+

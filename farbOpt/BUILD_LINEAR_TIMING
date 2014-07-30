@@ -1,0 +1,8 @@
+APP=$1
+FLAGS="-DUSE_LINEAR -openmp -std=c99 -O3 -openmp"
+
+icc $FLAGS -I $APP timing.c -o $APP/timing.off
+
+FLAGS+=" -Wno-unknown-pragmas"
+icc -no-offload $FLAGS -I $APP timing.c -o $APP/timing.omp
+icc -mmic $FLAGS -I $APP timing.c -o $APP/timing.mic
