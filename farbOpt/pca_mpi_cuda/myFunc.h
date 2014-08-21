@@ -422,7 +422,6 @@ void init_noIO(int _nExamples, userData_t *uData)
   // randomize the data
   for(int exIndex=0; exIndex < uData->nExamples; exIndex++) {
     for(int i=0; i < nInput; i++) 
-      for(int j=0; j < uData->nExamples; j++) 
 	uData->example[IN(i,uData->nExamples, exIndex)] = ((float)random())/((float)RAND_MAX);
     for(int i=0; i < nOutput; i++) 
       uData->example[OUT(i,uData->nExamples, exIndex)] = ((float)random())/((float)RAND_MAX);

@@ -6,8 +6,11 @@ GCC_FLAGS="-D$ACTIVATION -O3 -fopenmp -std=c99 -w "
 
 #VERY IMPORTANT! specify the correct number of GPUs per node!
 FLAGS="-DMPI_NUM_COPROC_PER_NODE=1 -D$ACTIVATION -DUSE_CUDA -w -O3 -Xcompiler -fopenmp -arch=compute_35 -use_fast_math "
+
 INC=" -I $NLOPT_DIR/include  -I $MPICH_HOME/include "
 LIB=" -L $NLOPT_DIR/lib -L $MPICH_HOME/lib "
+#INC=" -I $NLOPT_DIR/include  -I /usr/include/mpich"
+#LIB=" -L $NLOPT_DIR/lib -L /usr/lib/mpich "
 
 gcc $GCC_FLAGS genData.c -o gen_$APP
 
