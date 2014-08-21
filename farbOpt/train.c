@@ -1,4 +1,3 @@
-#define QUICK_TEST
 // Rob Farber
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,10 +48,11 @@ int main(int argc, char* argv[])
   //opt = nlopt_create(NLOPT_LN_AUGLAG, N_PARAM);
 
   nlopt_set_min_objective(opt, objFunc, (void*) &uData);
-#ifdef QUICK_TEST
-  fprintf(stderr,"Warning: performing a quick 30 second test!\n");
-  nlopt_set_maxtime(opt, 30); // Use for running quick tests
+#if defined(MAX_RUNTIME) 
+  fprintf(stderr,"Warning: performing a quick %d second test!\n", MAX_RUNTIME);
+  nlopt_set_maxtime(opt, MAX_RUNTIME); // Use for running quick tests
 #else
+  fprintf(stderr,"MAX runtime %d seconds!\n", 120*60);
   nlopt_set_maxtime(opt, (120. * 60.)); // maximum runtime in seconds
 #endif
   double minf; /* the minimum objective value, upon return */
