@@ -6,7 +6,7 @@
 #include <math.h>
 #include <omp.h>
 
-#ifdef MPI_NUM_COPROC_PER_NODE
+#if defined(MPI_NUM_COPROC_PER_NODE)
 #define MIC_DEV (mpiRank % MPI_NUM_COPROC_PER_NODE)
 #else
 #define MIC_DEV 0
@@ -286,4 +286,69 @@ void init(char*filename, userData_t *uData)
 
   if(fn!=stdin) fclose(fn);
 }
+
+// no file io test for timings on big supercomputers
+void init_noIO(int _nExamples, userData_t *uData)
+{
+  FILE *fn=stdin;
+
+#ifdef MPI_NUM_COPROC_PER_NODE
+#ifdef USE_CUDA
+  fprintf(stderr,"Using GPU %d\n", mpiRank % MPI_NUM_COPROC_PER_NODE);
+  cudaSetDevice(mpiRank % MPI_NUM_COPROC_PER_NODE);
+#endif
+#endif
+
+  // read the header information
+  double startTime=getTime();
+  int32_t nInput=N_INPUT, nOutput=N_OUTPUT;
+  int32_t nExamples = _nExamples;
+
+  if(nExamples <= 0) {
+    fprintf(stderr,"Number of examples incorrect!\n");
+    exit(1);
+  }
+  uData->nExamples = nExamples;
+  
+  // aligned allocation of the data
+  uData->example=(float*) memalign(64,nExamples*EXAMPLE_SIZE*sizeof(float));
+  if(!uData->example) {
+    fprintf(stderr,"Not enough memory for examples!\n");
+    exit(1);
+  }
+  // aligned allocation of the on-device parameters
+  uData->param=(float*) memalign(64,N_PARAM*sizeof(float));
+  if(!uData->param) {
+    fprintf(stderr,"Not enough memory for the parameters!\n");
+    exit(1);
+  }
+
+  // randomize the data
+  for(int exIndex=0; exIndex < uData->nExamples; exIndex++) {
+    for(int i=0; i < nInput; i++) 
+	uData->example[IN(i,uData->nExamples, exIndex)] = ((float)random())/((float)RAND_MAX);
+    for(int i=0; i < nOutput; i++) 
+      uData->example[OUT(i,uData->nExamples, exIndex)] = ((float)random())/((float)RAND_MAX);
+  }
+  
+#ifdef __INTEL_OFFLOAD
+  int nDevices =_Offload_number_of_devices();
+
+  if(nDevices == 0) {
+    fprintf(stderr,"No devices found!\n");
+    exit -1;
+  }
+#endif
+  // offload the data
+  double startOffload=getTime();
+  __declspec(align(64)) float * restrict example = uData->example; // compiler workaround
+  __declspec(align(64)) float * restrict param = uData->param; // compiler workaround
+  int Xsiz = uData->nExamples*EXAMPLE_SIZE; // compiler workaround
+  // Note: the in just allocates memory on the device
+#pragma offload target(mic:MIC_DEV) in(example: length(Xsiz) ALLOC) in(param : length(N_PARAM) ALLOC)
+  {} 
+
+  uData->timeDataLoad = getTime() - startTime;
+}
+
 
