@@ -1,5 +1,5 @@
 This is a collection of tests and implementations for the Farber
-machine-learning and numerical optimization framework. 
+machine-learning and numerical optimization framework.
 
 CUDA developers will be interested in the following directories 
 
@@ -12,37 +12,39 @@ The rest of the directories use the free nlopt library for nonlinear
 optimization found at
 http://ab-initio.mit.edu/wiki/index.php/NLopt. 
 
-The current 2-3 release can be retrieved and built. It is assumed that
-the library will be installed in the users home directory in
-install_cuda via:
+Please view ../nlopt/README.txt  for more information.
 
-  $ ./configure --prefix=$HOME/install_cuda
+There are a variety of directories
+   pca_cuda: a CUDA Principle Components example
+   pca_phi: an Intel Xeon Phi Principle Components example
+   nlpca_cuda: a CUDA NonLinear Principle Components example
+   nlpca_phi: an Intel Xeon Phi NonLinear Principle Components example
+   *_mpi_*: mpi versions of the same codes
 
-The CUDA related versions are located in: pca_cuda and nlpca_cuda. The
-only difference from a coding point of view is the define in the
-BUILD_CUDA script.
-   cd pca_cuda
-   sh BUILD_CUDA
-   sh RUN_CUDA
+The following directories work but the build scripts have not been updated:
+   xor_phi
+   pca_acc: An OpenACC Principle Components Analysis example
+   nlpca_acc: An OpenACC NonLinear Principle Components Analysis example
+   *_multi_: Versions that run on multiple devices in a system.
 
-or
-   cd nlpca_cuda
-   sh BUILD_CUDA
-   sh RUN_CUDA
+All the device specific code is in myFunc.h, which is identical
+between pca_cuda and nlpca_cuda. Eventaully myFunc.h will be identical
+between all examples.
 
-All the CUDA specific code is in myFunc.h, which is identical between
-pca_cuda and nlpca_cuda. The python script genFunc.py can be used to
-generate functions for optimization of various complexity, or the
-programmer can provide thier own.
+The python script genFunc.py can be used to generate functions for
+optimization of various complexity, or the programmer can provide
+thier own.
 
 
-Note that this version is limited to 30 seconds of runtime. To check
-for convergence (which can take awhile), comment out the QUICK_TEST in
-line 1 of train.c. Correctness can be see by running "sh DRAW_DATA"
-after performing a run that is not limited to 30 seconds. The two
-graphs in the .png files should look the same. The *_known.png is the
-graph of the train data and the _pred.png shows the results of the
-[pca,nlpca] model that was fit.
+Note that this version is limited to a short runtime in the file
+common.sh in each directory. To check for convergence (which can take
+awhile), change MAX_RUN.
+
+Correctness can be see by running "sh DRAW_DATA" after performing a
+run that is not limited to 30 seconds. The two graphs in the .png
+files should look the same. The *_known.png is the graph of the train
+data and the _pred.png shows the results of the [pca,nlpca] model that
+was fit.
 
 Look to my online article for Intel Xeon Phi for more information, and
 chapters 2,3, and 10 of my book "CUDA Application Design and
