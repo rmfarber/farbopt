@@ -7,10 +7,6 @@
 
 int numTasks, mpiRank;
 
-// number of coprocessors per node (else assume 1 per node)
-//#define MPI_NUM_COPROC_PER_NODE 2
-#define TACC_TEST
-
 #include "myFunc.h"
 
 void writeParam(char *filename, int nParam, double *x)
@@ -82,16 +78,17 @@ int main(int argc, char* argv[])
   MPI_Comm_size(MPI_COMM_WORLD,&numTasks);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpiRank);
 
-#ifndef TACC_TEST
+#if defined(NO_IO_EXAMPLES)
+#pragma message "TEST case: Clients use random memory values"
+    init_noIO(NO_IO_EXAMPLES,&uData); 
+#else
+#pragma message "TEST case: all clients perform file reads"
   { // for simplicity, append the mpiRank to the data filename
     char filename[256];
     sprintf(filename,"%s.%d",argv[1],mpiRank);
     //fprintf(stderr,"Loading %s into coprocessor %d\n", filename, MIC_DEV);
     init(filename,&uData); 
   }
-#else
-#pragma message "TEST case: all clients use one file"
-    init(argv[1],&uData); 
 #endif
 
   if(mpiRank > 0) {
