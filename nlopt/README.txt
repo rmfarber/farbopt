@@ -9,6 +9,7 @@ To build with defaults using gcc for OpenMP and CUDA:
    export CFLAGS="-O3"
    export CXXFLAGS="-O3"
    ./configure --prefix=`pwd`/../../install_gcc
+   make -j 8 install
 
 This will install in the install_gcc library two levels up. This
 directory structure is convenient for benchmarking as it keeps
