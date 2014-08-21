@@ -8,4 +8,4 @@ source ./common.sh
 #SBATCH -p gpu  # Queue (partition) name -- normal, development, etc.
 #SBATCH -t 00:10:00     # Run time (hh:mm:ss) - 1.5 hours
 
-ibrun ./mpiTrain_nlpca.cuda NameDoesNotMatter.dat nlpca.param gpuTiming
+ibrun ./mpiTrain_$APP.cuda NameDoesNotMatter.dat $APP.param gpuTiming
