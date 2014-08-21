@@ -1,6 +1,0 @@
-APP=$1
-FLAGS="-DUSE_ELLIOTT -std=c99 -O3 -openmp "
-
-icc -openmp -no-offload -Wno-unknown-pragmas $FLAGS -I $APP timing.c -o $APP/timing.omp
-icc -O3 -mmic -openmp -Wno-unknown-pragmas $FLAGS -I $APP timing.c -o $APP/timing.mic
-icc -O3 $FLAGS -I $APP timing.c -o $APP/timing.off

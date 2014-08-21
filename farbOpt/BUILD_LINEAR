@@ -1,6 +1,0 @@
-APP=$1
-FLAGS="-D_USE_LINEAR -O3 -std=gnu99 -openmp"
-icc $FLAGS train.c -I $APP -I ~/install/include  -L ~/install/lib -lnlopt -lm -o $APP/train_$APP.off
-icc $FLAGS -Wno-unknown-pragmas -no-offload -I $APP train.c -I ~/install/include  -L ~/install/lib -lnlopt -lm -o $APP/train_$APP.omp
-icc $FLAGS -Wno-unknown-pragmas -no-offload -openmp -I $APP pred.c -lm -o $APP/pred_$APP.omp
-icc $FLAGS $APP/genData.c -o $APP/gen_$APP

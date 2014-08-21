@@ -40,18 +40,3 @@ For Offload mode:
    make clean
    ./configure --host=x86 --prefix=`pwd`/../../install_mic_native
    make -j 8 install
-
-
-
-
-
-
-   wget http://ab-initio.mit.edu/nlopt/nlopt-2.4.2.tar.gz
-   tar -xzf nlopt-2.4.2.tar.gz
-   cd nlopt-2.4.2/
-   export CFLAGS="-O3"
-   export CXXFLAGS="-O3"
-   ./configure --prefix=`pwd`/../../install_gcc
-   make -j 8 install
-
-
