@@ -9,7 +9,7 @@ LIB=" -L $NLOPT_DIR/lib -L $MPICH_HOME/lib "
 
 gcc $GCC_FLAGS genData.c -o gen_$APP
 
-gcc $NO_IO_TEST $GCC_FLAGS ../mpiTrain.c -I . $INC  $LIB -lnlopt -lm -lmpich -lmpl -o mpiTrain_$APP.omp
+gcc $NO_IO_TEST $MAX_RUN $GCC_FLAGS ../mpiTrain.c -I . $INC  $LIB -lnlopt -lm -lmpich -lmpl -o mpiTrain_$APP.omp
 
 gcc $GCC_FLAGS ../pred.c -I . -lm -o pred_$APP
 

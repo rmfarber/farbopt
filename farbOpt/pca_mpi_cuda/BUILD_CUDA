@@ -11,7 +11,7 @@ LIB=" -L $NLOPT_DIR/lib -L $MPICH_HOME/lib "
 
 gcc $GCC_FLAGS genData.c -o gen_$APP
 
-nvcc $NO_IO_TEST -x cu $FLAGS ../mpiTrain.c -I . $INC  $LIB -lnlopt -lm -lmpich -lmpl -o mpiTrain_$APP.cuda 
+nvcc $NO_IO_TEST -x cu $MAX_RUN $FLAGS ../mpiTrain.c -I . $INC  $LIB -lnlopt -lm -lmpich -lmpl -o mpiTrain_$APP.cuda 
 
 gcc $GCC_FLAGS ../pred.c -I . -lm -o pred_$APP
 
