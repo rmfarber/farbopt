@@ -1,12 +1,8 @@
-# a 60 second quick test
-MAX_RUN="-DMAX_RUNTIME=60"
+. ./common.sh
 
-# The location of the NLOPT directory
-NLOPT_DIR=$PWD/../../install_gcc
+GCC_FLAGS="-D$ACTIVATION -O3 -fopenmp -std=c99 -w "
+FLAGS="-D$ACTIVATION -DUSE_CUDA -w -O3 -Xcompiler -fopenmp -arch=compute_35 -use_fast_math "
 
-APP=nlpca
-GCC_FLAGS="-DUSE_ELLIOTT -O3 -fopenmp -std=c99 -w "
-FLAGS="-DUSE_ELLIOTT -DUSE_CUDA -w -O3 -Xcompiler -fopenmp -arch=compute_35 -use_fast_math "
 INC=$NLOPT_DIR/include
 LIB=$NLOPT_DIR/lib
 

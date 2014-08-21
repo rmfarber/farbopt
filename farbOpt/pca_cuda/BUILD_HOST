@@ -1,12 +1,8 @@
-# a 60 second quick test
-MAX_RUN="-DMAX_RUNTIME=60"
+. ./common.sh
 
-# The location of the NLOPT directory
-NLOPT_DIR='pwd'/../../install_gcc
-APP=pca
-GCC_FLAGS="-DUSE_LINEAR -O3 -fopenmp -std=c99 -w -msse "
-INC=$HOME/install_cuda/include
-LIB=$HOME/install_cuda/lib
+GCC_FLAGS="-D$ACTIVATION -O3 -fopenmp -std=c99 -w -msse "
+INC=$NLOPT_DIR/include
+LIB=$NLOPT_DIR/lib
 
 gcc $GCC_FLAGS genData.c -o gen_$APP
 

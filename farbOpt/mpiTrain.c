@@ -5,7 +5,6 @@
 #include <nlopt.h>
 #include "mpi.h"
 
-
 int numTasks, mpiRank;
 
 // number of coprocessors per node (else assume 1 per node)
@@ -125,13 +124,14 @@ int main(int argc, char* argv[])
     //opt = nlopt_create(NLOPT_LN_AUGLAG, N_PARAM);
     
     nlopt_set_min_objective(opt, mpiObjFunc, (void*) &uData);
-#ifndef TACC_TEST
-    nlopt_set_maxtime(opt, 3600/4.); // maximum runtime in seconds
+#if defined(MAX_RUNTIME) 
+  fprintf(stderr,"Warning: performing a quick %d second test!\n", MAX_RUNTIME);
+  nlopt_set_maxtime(opt, MAX_RUNTIME); // Use for running quick tests
 #else
-#pragma message "Only running for short time"
-    nlopt_set_maxtime(opt, 20); // maximum runtime in seconds
-    fprintf(stderr,"Runtime %d\n",20);
+  fprintf(stderr,"MAX runtime %d seconds!\n", 120*60);
+  nlopt_set_maxtime(opt, (120. * 60.)); // maximum runtime in seconds
 #endif
+
     double minf; /* the minimum objective value, upon return */
     
     __declspec(align(64)) double x[N_PARAM];
