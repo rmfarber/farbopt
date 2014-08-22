@@ -309,7 +309,7 @@ void init(char*filename, userData_t *uData)
 
 #ifdef MPI_NUM_COPROC_PER_NODE
 #ifdef USE_CUDA
-  fprintf(stderr,"Using GPU %d\n", mpiRank % MPI_NUM_COPROC_PER_NODE);
+  //fprintf(stderr,"Using GPU %d\n", mpiRank % MPI_NUM_COPROC_PER_NODE);
   cudaSetDevice(mpiRank % MPI_NUM_COPROC_PER_NODE);
 #endif
 #endif
@@ -389,7 +389,7 @@ void init_noIO(int _nExamples, userData_t *uData)
 
 #ifdef MPI_NUM_COPROC_PER_NODE
 #ifdef USE_CUDA
-  fprintf(stderr,"Using GPU %d\n", mpiRank % MPI_NUM_COPROC_PER_NODE);
+  //fprintf(stderr,"Using GPU %d\n", mpiRank % MPI_NUM_COPROC_PER_NODE);
   cudaSetDevice(mpiRank % MPI_NUM_COPROC_PER_NODE);
 #endif
 #endif
