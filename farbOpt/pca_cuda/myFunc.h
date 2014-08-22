@@ -74,7 +74,7 @@ __device__
 #include "fcn.h"
 
 #ifdef USE_CUDA
-#define N_CONCURRENT_BLOCKS (13*16)
+#define N_CONCURRENT_BLOCKS (15*16)
 __device__ inline void atomicAdd (double *address, double value)
  {
    unsigned long long oldval, newval, readback; 
@@ -123,7 +123,6 @@ __global__ void d_objFunc(T* d_param, T *d_example, int nExamples, T1 *out)
 }
 #endif
 
-#define N_CONCURRENT_BLOCKS (13*16)
 // The offload objective function
 double _objFunc(unsigned int n,  const double * restrict x,
 		double * restrict grad, void * restrict my_func_data)
