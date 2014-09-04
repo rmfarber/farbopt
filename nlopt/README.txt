@@ -31,7 +31,7 @@ For Offload mode:
    export CXX=icpc
    export CXXFLAGS="-O3 -xhost"
    export LDFLAGS="-lirc -limf -lsvml"
-   ./configure --host=x86 --prefix=`pwd`/../../install_mic_native
+   ./configure --host=x86 --prefix=`pwd`/../../install_mic
    make -j 8 install
 
 #For Native mode (assumes the offload mode was just built):
