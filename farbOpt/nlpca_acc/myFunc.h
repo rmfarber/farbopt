@@ -127,7 +127,7 @@ double _objFunc(unsigned int n,  const double * restrict x,
       double partial=0.;
 #pragma acc loop sequential
       for(int j=i; j < nExamples ; j += nThreads) {
-	float d=myFunc(i+j, param, example, nExamples, NULL);
+	float d=myFunc(j, param, example, nExamples, NULL);
 	partial += d*d;
       }
       err += partial;
