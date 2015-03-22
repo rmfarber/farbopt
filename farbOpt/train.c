@@ -63,7 +63,6 @@ int main(int argc, char* argv[])
   int nExamples=uData.nExamples*EXAMPLE_SIZE;
   float* example=uData.example;
   float* param=uData.param;
-#pragma acc data pcopyin(example[0:nExamples-1])
   {
     double startTime=getTime();
     int ret=nlopt_optimize(opt, x, &minf);
