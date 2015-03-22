@@ -8,9 +8,9 @@ inline float myFunc(const int vIndex, const float  * restrict P,
                     const float * restrict ex, const int nExamples,
                     float * restrict pred)
 {
-   float in[2];
-   in[0] = ex[IN(0, nExamples, vIndex)];
-   in[1] = ex[IN(1, nExamples, vIndex)];
+  float in_0, in_1;
+   in_0 = ex[IN(0, nExamples, vIndex)];
+   in_1 = ex[IN(1, nExamples, vIndex)];
    register float h1_0 = P[0];
    register float h1_1 = P[1];
    register float h1_2 = P[2];
@@ -21,26 +21,26 @@ inline float myFunc(const int vIndex, const float  * restrict P,
    register float h1_7 = P[7];
    register float h1_8 = P[8];
    register float h1_9 = P[9];
-   h1_0 += in[0] * P[10];
-   h1_1 += in[0] * P[11];
-   h1_2 += in[0] * P[12];
-   h1_3 += in[0] * P[13];
-   h1_4 += in[0] * P[14];
-   h1_5 += in[0] * P[15];
-   h1_6 += in[0] * P[16];
-   h1_7 += in[0] * P[17];
-   h1_8 += in[0] * P[18];
-   h1_9 += in[0] * P[19];
-   h1_0 += in[1] * P[20];
-   h1_1 += in[1] * P[21];
-   h1_2 += in[1] * P[22];
-   h1_3 += in[1] * P[23];
-   h1_4 += in[1] * P[24];
-   h1_5 += in[1] * P[25];
-   h1_6 += in[1] * P[26];
-   h1_7 += in[1] * P[27];
-   h1_8 += in[1] * P[28];
-   h1_9 += in[1] * P[29];
+   h1_0 += in_0 * P[10];
+   h1_1 += in_0 * P[11];
+   h1_2 += in_0 * P[12];
+   h1_3 += in_0 * P[13];
+   h1_4 += in_0 * P[14];
+   h1_5 += in_0 * P[15];
+   h1_6 += in_0 * P[16];
+   h1_7 += in_0 * P[17];
+   h1_8 += in_0 * P[18];
+   h1_9 += in_0 * P[19];
+   h1_0 += in_1 * P[20];
+   h1_1 += in_1 * P[21];
+   h1_2 += in_1 * P[22];
+   h1_3 += in_1 * P[23];
+   h1_4 += in_1 * P[24];
+   h1_5 += in_1 * P[25];
+   h1_6 += in_1 * P[26];
+   h1_7 += in_1 * P[27];
+   h1_8 += in_1 * P[28];
+   h1_9 += in_1 * P[29];
    h1_0 = G(h1_0);
    h1_1 = G(h1_1);
    h1_2 = G(h1_2);
@@ -107,7 +107,7 @@ inline float myFunc(const int vIndex, const float  * restrict P,
 #ifdef DO_PRED
    pred[0] = o;
 #endif
-   o -= in[0];
+   o -= in_0;
    sum += o*o;
    o = P[72];
    o += h3_0 * P[73];
@@ -123,7 +123,7 @@ inline float myFunc(const int vIndex, const float  * restrict P,
 #ifdef DO_PRED
    pred[1] = o;
 #endif
-   o -= in[1];
+   o -= in_1;
    sum += o*o;
    return(sum);
 }

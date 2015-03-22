@@ -1,6 +1,4 @@
-APP=pca
-EXAMPLES=30000000
-VAR=0.1
+. ./common.sh
 
 ./gen_$APP $APP.train.dat $EXAMPLES $VAR 1234
 ./train_$APP.acc $APP.train.dat $APP.param 
@@ -10,4 +8,4 @@ VAR=0.1
 # create file for gnuplot
 tail -n +3 output.txt > plot.txt
 
-rm *.dat
+#rm *.dat
