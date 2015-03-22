@@ -80,7 +80,7 @@ double _objFunc(unsigned int n,  const double * restrict x,
   // compiler workaround
   __declspec(align(64)) const float * restrict example = uData->example;
   __declspec(align(64)) const float * restrict param = uData->param; 
-#pragma acc data copyin(param[0:N_PARAM-1]) pcopyin(example[0:nExamples*EXAMPLE_SIZE-1])
+#pragma acc data copyin(param[0:N_PARAM]) pcopyin(example[0:nExamples*EXAMPLE_SIZE])
 #pragma offload target(mic:MIC_DEV) in(param:length(N_PARAM) REUSE) \
                                     out(err) in(example:length(0) REUSE)
 #ifdef ORIG_LOOP
@@ -304,6 +304,7 @@ void init(char*filename, userData_t *uData)
   // Note: the in just allocates memory on the device
 #pragma offload target(mic:MIC_DEV) in(example: length(Xsiz) ALLOC) in(param : length(N_PARAM) ALLOC)
   {} 
+#pragma acc enter data copyin(example[0:Xsiz])
 
   uData->timeDataLoad = getTime() - startTime;
 
