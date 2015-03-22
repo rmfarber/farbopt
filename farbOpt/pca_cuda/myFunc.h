@@ -1,9 +1,16 @@
+// Rob Farber
+
+// Define key GPU characteristics
+#define NUM_SMX 15
+#define NUM_ACTIVE_SMX_QUEUE 16
+#define VEC_LEN 32 
+
 #ifndef USE_CUDA
 #define __device__
 #endif
 #define restrict
 #define __declspec(x)
-// Rob Farber
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -74,7 +81,6 @@ __device__
 #include "fcn.h"
 
 #ifdef USE_CUDA
-#define N_CONCURRENT_BLOCKS (15*16)
 __device__ inline void atomicAdd (double *address, double value)
  {
    unsigned long long oldval, newval, readback; 
@@ -151,7 +157,7 @@ double _objFunc(unsigned int n,  const double * restrict x,
     exit(-1);
   }
 
-  d_objFunc<float,double,32><<<N_CONCURRENT_BLOCKS, 32>>>(uData->d_param, uData->d_example, nExamples,uData->d_out);
+  d_objFunc<float,double,32><<<NUM_SMX*NUM_ACTIVE_SMX_QUEUE, VEC_LEN>>>(uData->d_param, uData->d_example, nExamples,uData->d_out);
   ret=cudaGetLastError();
   if( ret != cudaSuccess) {
     fprintf(stderr,"CUDA error: %s\n", cudaGetErrorString(ret));
