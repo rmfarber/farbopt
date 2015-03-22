@@ -94,6 +94,27 @@ double _objFunc(unsigned int n,  const double * restrict x,
     err += d*d;
     }
   }
+#elif MULTICORE_LAYOUT
+ {
+    err=0.;
+    
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int nThreads= nGangs * VEC_LEN;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+    int nExPerThread = nExamples/nThreads;
+#pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+    for(int i=0; i < nThreads; ++i) {
+      double partial=0.;
+      int exEnd = i*nExPerThread + nExPerThread;
+      exEnd = (exEnd < nExamples)?exEnd:nExamples;
+#pragma acc loop sequential
+      for(int j=i*nExPerThread; j < exEnd; ++j) {
+	float d=myFunc(j, param, example, nExamples, NULL);
+	partial += d*d;
+      }
+      err += partial;
+    }
+  }
 #else
   {
     err=0.;

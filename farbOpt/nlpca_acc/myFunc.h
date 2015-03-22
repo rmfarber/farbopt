@@ -1,4 +1,11 @@
+// Define key GPU characteristics
+#define NUM_SMX 15
+#define NUM_ACTIVE_SMX_QUEUE 16
+#define VEC_LEN 32 
+
+//undefine __declspec
 #define __declspec(x)
+
 // Rob Farber
 #include <stdlib.h>
 #include <string.h>
@@ -59,12 +66,11 @@ inline float G(float x) { return( x/(1.f+fabsf(x)) ) ;}
 // This file defines the function to be evaluated
 #include "fcn.h"
 
-#define N_CONCURRENT_BLOCKS (13*16)
 // The offload objective function
 double _objFunc(unsigned int n,  const double * restrict x,
 		double * restrict grad, void * restrict my_func_data)
 {
-  double err;
+  double err=0.;
   userData_t *uData = (userData_t *) my_func_data;
 
   // convert from double to float for speed
@@ -72,21 +78,62 @@ double _objFunc(unsigned int n,  const double * restrict x,
   
   int nExamples = uData->nExamples;
   // compiler workaround
-  __declspec(align(64)) float * restrict example = uData->example;
-  __declspec(align(64)) float * restrict param = uData->param; 
+  __declspec(align(64)) const float * restrict example = uData->example;
+  __declspec(align(64)) const float * restrict param = uData->param; 
 #pragma acc data copyin(param[0:N_PARAM-1]) pcopyin(example[0:nExamples*EXAMPLE_SIZE-1])
 #pragma offload target(mic:MIC_DEV) in(param:length(N_PARAM) REUSE) \
                                     out(err) in(example:length(0) REUSE)
+#ifdef ORIG_LOOP
   {
-    err=0.; // initialize error here in case offload selected
-    
-#pragma acc parallel loop reduction(+:err)
-#pragma omp parallel for reduction(+ : err)
-    for(int i=0; i < nExamples; i++) {
-      float d=myFunc(i, param, example, nExamples, NULL);
-      err += d*d;
+    err=0.;
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+#pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+  for(int i=0; i < nExamples; ++i) {
+    float d=myFunc(i, param, example, nExamples, NULL);
+    err += d*d;
     }
   }
+#elif MULTICORE_LAYOUT
+ {
+    err=0.;
+    
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int nThreads= nGangs * VEC_LEN;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+    int nExPerThread = nExamples/nThreads;
+#pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+    for(int i=0; i < nThreads; ++i) {
+      double partial=0.;
+      int exEnd = i*nExPerThread + nExPerThread;
+      exEnd = (exEnd < nExamples)?exEnd:nExamples;
+#pragma acc loop sequential
+      for(int j=i*nExPerThread; j < exEnd; ++j) {
+	float d=myFunc(j, param, example, nExamples, NULL);
+	partial += d*d;
+      }
+      err += partial;
+    }
+  }
+#else
+  {
+    err=0.;
+    
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int nThreads= nGangs * VEC_LEN;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+    #pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+    for(int i=0; i < nThreads; ++i) {
+      double partial=0.;
+#pragma acc loop sequential
+      for(int j=i; j < nExamples ; j += nThreads) {
+	float d=myFunc(i+j, param, example, nExamples, NULL);
+	partial += d*d;
+      }
+      err += partial;
+    }
+  }
+#endif
 
   return sqrt(err);
 }
