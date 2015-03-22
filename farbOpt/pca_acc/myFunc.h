@@ -1,4 +1,11 @@
+// Define key GPU characteristics
+#define NUM_SMX 15
+#define NUM_ACTIVE_SMX_QUEUE 16
+#define VEC_LEN 32 
+
+//undefine __declspec
 #define __declspec(x)
+
 // Rob Farber
 #include <stdlib.h>
 #include <string.h>
@@ -59,8 +66,6 @@ inline float G(float x) { return( x/(1.f+fabsf(x)) ) ;}
 // This file defines the function to be evaluated
 #include "fcn.h"
 
-#define VEC_LEN 32
-
 // The offload objective function
 double _objFunc(unsigned int n,  const double * restrict x,
 		double * restrict grad, void * restrict my_func_data)
@@ -81,7 +86,9 @@ double _objFunc(unsigned int n,  const double * restrict x,
 #ifdef ORIG_LOOP
   {
     err=0.;
-#pragma acc parallel loop vector_length(VEC_LEN) reduction(+:err)
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+#pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
   for(int i=0; i < nExamples; ++i) {
     float d=myFunc(i, param, example, nExamples, NULL);
     err += d*d;
@@ -91,11 +98,9 @@ double _objFunc(unsigned int n,  const double * restrict x,
   {
     err=0.;
     
-    int nSMX=15;
-    int nActiveQueue=16;
-    int nGangs = nSMX * nActiveQueue;
-    int vLen=32;
-    int nThreads= nGangs * vLen;
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int nThreads= nGangs * VEC_LEN;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
     #pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
     for(int i=0; i < nThreads; ++i) {
       double partial=0.;

@@ -1,16 +1,14 @@
-APP=nlpca
-FLAGS="-DUSE_ELLIOTT -c99 -O3 "
-INC=" -I $HOME/install/include "
-LIB=$HOME/install/lib
+. ./common.sh
 
-pgcc $FLAGS genData.c -o gen_$APP
+FLAGS="-D$ACTIVATION -acc -w -O3 -use_fast_math -Minline=myFunc"
 
-pgcc $FLAGS ../train.c -I . $INC  -L $LIB -lnlopt -lm -o train_$APP.omp
+INC=$NLOPT_DIR/include
+LIB=$NLOPT_DIR/lib
 
-#pgcc -ta=nvidia,5.0,cc35 -Minfo -Minline=myFunc -acc $FLAGS ../train.c -I . $INC \
-#	-L $LIB -lnlopt -lm -o train_$APP.acc
-pgcc -Minline=myFunc -acc $FLAGS ../train.c -I . $INC \
-	-L $LIB -lnlopt -lm -o train_$APP.acc
+pgcc $GCC_FLAGS genData.c -o gen_$APP
 
-pgcc $FLAGS ../pred.c -I . -lm -o pred_$APP
+pgcc -ta=nvidia,6.5,cc35 -Minfo $FLAGS ../train.c $MAX_RUN -I . -I $INC  -L $LIB -lnlopt -lm -o train_$APP.acc
+
+pgcc $GCC_FLAGS ../pred.c -I . -lm -o pred_$APP
+
 
