@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 #ifdef MPI_NUM_COPROC_PER_NODE
     printf ("Number of coprocessors per node= %d\n", MPI_NUM_COPROC_PER_NODE);
 #endif
-    printf("myFunc %s\n", desc);
+    printf("myFunc %s\n", G_DESC_STRING);
     printf("nExamples %d\n", uData.nExamples);
     printf("Number Parameters %d\n", N_PARAM);
     

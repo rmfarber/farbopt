@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     return -1;
   }
   init(argv[1],&uData);
-  printf("myFunc %s\n", desc);
+  printf("myFunc %s\n", G_DESC_STRING);
   printf("nExamples %d\n", uData.nExamples);
   printf("Number Parameters %d\n", N_PARAM);
   
