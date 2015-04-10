@@ -35,7 +35,7 @@ inline double getTime() { return(omp_get_wtime());}
 
 #pragma offload_attribute (push, target (mic))
 
-#define restruct
+#define restrict
 #define __device__
 #define __host__
 

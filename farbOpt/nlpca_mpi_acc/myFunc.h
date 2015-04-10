@@ -7,6 +7,9 @@
 
 //undefine __declspec
 #define __declspec(x)
+#define restrict
+#define __device__
+#define __host__
 
 // Rob Farber
 #include <stdlib.h>
@@ -41,29 +44,6 @@ typedef struct userData {
 inline double getTime() { return(omp_get_wtime());}
 
 #pragma offload_attribute (push, target (mic))
-
-// helper macros to index into the example array
-#define IN(i,nExamples,j)  (i*nExamples+j)
-#define OUT(i,nExamples,j)  ((i+N_INPUT)*nExamples+j)
-
-// Define the Sigmoid
-#ifdef USE_LINEAR
-#define G_DESC_STRING "generated_PCA_func LINEAR()"
-inline float G(float x) { return( x ) ;} 
-#define G_ESTIMATE 0 
-#elif USE_TANH
-#define G_DESC_STRING "generated_func tanh()"
-inline float G(float x) { return( tanhf(x) ) ;} 
-#define G_ESTIMATE 7 // estimate 7 flops for G
-#elif LOGISTIC
-#define G_DESC_STRING "generated func logistic()"
-inline float G(float x) { return( 1.f/(1.f+expf(-x)) ) ;} 
-#define G_ESTIMATE 7 // estimate flops for G
-#else // Use Elliott function
-#define G_DESC_STRING "generated func Eliott activation: x/(1+fabsf(x))"
-inline float G(float x) { return( x/(1.f+fabsf(x)) ) ;} 
-#define G_ESTIMATE 3 // estimate flops for G
-#endif
 
 #include "myCommon.h"
 
