@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 
   if(mpiRank==0) {
     printf("----------- performance times for the MPI run ----------\n");
-    printf("function: %s\n",desc);
+    printf("function: %s\n",G_DESC_STRING);
     
     uint64_t totalExamples=0;
     for(int i=0; i < numTasks; i++) totalExamples += client_nExamples[i];
