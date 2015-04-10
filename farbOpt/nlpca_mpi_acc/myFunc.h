@@ -1,10 +1,5 @@
 #include <stdlib.h>
 
-// Define key GPU characteristics
-#define NUM_SMX 14
-#define NUM_ACTIVE_SMX_QUEUE 16
-#define VEC_LEN 32 
-
 //undefine __declspec
 #define __declspec(x)
 #define restrict
