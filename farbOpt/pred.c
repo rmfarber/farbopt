@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  printf("myFunc %s\n", desc);
+  printf("myFunc %s\n", G_DESC_STRING);
   init(argv[2],&uData); 
   printf("nExamples %d\n", uData.nExamples);
   
