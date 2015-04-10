@@ -1,8 +1,13 @@
-#ifndef USE_CUDA
-#define __device__
-#endif
-#define restrict
+#include <stdlib.h>
+
+// Define key GPU characteristics
+#define NUM_SMX 14
+#define NUM_ACTIVE_SMX_QUEUE 16
+#define VEC_LEN 32 
+
+//undefine __declspec
 #define __declspec(x)
+
 // Rob Farber
 #include <stdlib.h>
 #include <string.h>
@@ -23,11 +28,6 @@ typedef struct userData {
   int nExamples;
   __declspec(align(64)) float * restrict example; 
   __declspec(align(64)) float * restrict param;
-#ifdef USE_CUDA
-  float *d_example;
-  float *d_param;
-  float *d_out;
-#endif
 
   // Timing information
   int isWarmup;
@@ -48,56 +48,33 @@ inline double getTime() { return(omp_get_wtime());}
 
 // Define the Sigmoid
 #ifdef USE_LINEAR
-char *desc="generated_PCA_func LINEAR()";
-__device__
+#define G_DESC_STRING "generated_PCA_func LINEAR()"
 inline float G(float x) { return( x ) ;} 
 #define G_ESTIMATE 0 
 #elif USE_TANH
-char *desc="generated_func tanh()";
-__device__
+#define G_DESC_STRING "generated_func tanh()"
 inline float G(float x) { return( tanhf(x) ) ;} 
 #define G_ESTIMATE 7 // estimate 7 flops for G
 #elif LOGISTIC
-char *desc="generated func logistic()";
-__device__
+#define G_DESC_STRING "generated func logistic()"
 inline float G(float x) { return( 1.f/(1.f+expf(-x)) ) ;} 
 #define G_ESTIMATE 7 // estimate flops for G
 #else // Use Elliott function
-char *desc="generated func Eliott activation: x/(1+fabsf(x))";
-__device__
+#define G_DESC_STRING "generated func Eliott activation: x/(1+fabsf(x))"
 inline float G(float x) { return( x/(1.f+fabsf(x)) ) ;} 
 #define G_ESTIMATE 3 // estimate flops for G
 #endif
 
+#include "myCommon.h"
+
 // This file defines the function to be evaluated
-__device__
 #include "fcn.h"
 
-#ifdef USE_CUDA
-#define N_CONCURRENT_BLOCKS (13*16)
-
-__global__ void d_objFunc(float* d_param, float *d_example, int nExamples, float* out)
-{
-  int tid = blockIdx.x*blockDim.x + threadIdx.x;
-  if(tid==0) *out=0.f;
-  __syncthreads();
-
-  register float partial=0.f;
-  while(tid < nExamples) {
-    float d= myFunc(tid, d_param, d_example, nExamples, NULL);
-    partial += d*d;
-    tid += blockDim.x * gridDim.x;
-  }
-  atomicAdd(out, partial);
-}
-#endif
-
-#define N_CONCURRENT_BLOCKS (13*16)
 // The offload objective function
 double _objFunc(unsigned int n,  const double * restrict x,
 		double * restrict grad, void * restrict my_func_data)
 {
-  double err;
+  double err=0.;
   userData_t *uData = (userData_t *) my_func_data;
 
   // convert from double to float for speed
@@ -105,44 +82,72 @@ double _objFunc(unsigned int n,  const double * restrict x,
   
   int nExamples = uData->nExamples;
   // compiler workaround
-  __declspec(align(64)) float * restrict example = uData->example;
-  __declspec(align(64)) float * restrict param = uData->param; 
-#pragma acc data copyin(param[0:N_PARAM-1]) pcopyin(example[0:nExamples*EXAMPLE_SIZE-1])
+  __declspec(align(64)) const float * restrict example = uData->example;
+  __declspec(align(64)) const float * restrict param = uData->param; 
+#pragma acc data copyin(param[0:N_PARAM]) pcopyin(example[0:nExamples*EXAMPLE_SIZE])
 #pragma offload target(mic:MIC_DEV) in(param:length(N_PARAM) REUSE) \
                                     out(err) in(example:length(0) REUSE)
+#ifdef ORIG_LOOP
   {
-    err=0.; // initialize error here in case offload selected
-    
-#ifdef USE_CUDA
-  cudaError_t ret;
-  ret=cudaMemcpy(uData->d_param, param, sizeof(float)*N_PARAM, cudaMemcpyHostToDevice);
-  if( ret != cudaSuccess) {
-    fprintf(stderr,"CUDA error (cudaMemcpy param): %s\n", cudaGetErrorString(ret));
-    exit(-1);
-  }
-
-  d_objFunc<<<N_CONCURRENT_BLOCKS, 32>>>(uData->d_param, uData->d_example, nExamples,uData->d_out);
-  ret=cudaGetLastError();
-  if( ret != cudaSuccess) {
-    fprintf(stderr,"CUDA error: %s\n", cudaGetErrorString(ret));
-    exit(-1);
-  }
-  float tmp;
-  ret = cudaMemcpy(&tmp, uData->d_out, sizeof(float), cudaMemcpyDeviceToHost);
-  if( ret != cudaSuccess) {
-    fprintf(stderr,"CUDA memcpy(sum): %s\n", cudaGetErrorString(ret));
-    exit(-1);
-  }
-  err=tmp;
-#else
-#pragma acc parallel loop num_gangs(13*16) vector_length(32) reduction(+:err)
-#pragma omp parallel for reduction(+ : err)
-    for(int i=0; i < nExamples; i++) {
-      float d=myFunc(i, param, example, nExamples, NULL);
-      err += d*d;
+    err=0.;
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+#pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+  for(int i=0; i < nExamples; ++i) {
+    float d=myFunc(i, param, example, nExamples, NULL);
+    err += d*d;
     }
-#endif
   }
+#elif MULTICORE_LAYOUT
+ {
+    err=0.;
+    
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int nThreads= nGangs * VEC_LEN;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+    int nExPerThread = nExamples/nThreads;
+#pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+    for(int i=0; i < nThreads; ++i) {
+      double partial=0.;
+      int exEnd = i*nExPerThread + nExPerThread;
+      exEnd = (exEnd < nExamples)?exEnd:nExamples;
+#pragma acc loop sequential
+      for(int j=i*nExPerThread; j < exEnd; ++j) {
+	float d=myFunc(j, param, example, nExamples, NULL);
+	partial += d*d;
+      }
+      err += partial;
+    }
+  }
+#elif CALL_CUDA
+{
+  extern double cuda_objFunc(float*, float *, int, double *);
+  double out[1];
+#pragma acc data pcreate(out[0:1])
+#pragma acc host_data use_device(out, example, param)
+  {
+    err = cuda_objFunc(param, example, nExamples, out); // initializes out to zero
+  }
+}
+#else
+  {
+    err=0.;
+    
+    int nGangs = NUM_SMX * NUM_ACTIVE_SMX_QUEUE;
+    int nThreads= nGangs * VEC_LEN;
+    int vLen = VEC_LEN; // for some reason PGI needs this as a variable
+    #pragma acc parallel loop num_gangs(nGangs) vector_length(vLen) reduction(+:err)
+    for(int i=0; i < nThreads; ++i) {
+      double partial=0.;
+#pragma acc loop sequential
+      for(int j=i; j < nExamples ; j += nThreads) {
+	float d=myFunc(j, param, example, nExamples, NULL);
+	partial += d*d;
+      }
+      err += partial;
+    }
+  }
+#endif
 
   return sqrt(err);
 }
@@ -221,27 +226,6 @@ void fini(userData_t *uData)
 
 void offloadData(userData_t *uData)
 {
-#ifdef USE_CUDA
-  cudaError_t err;
-  long exSize=sizeof(float)*EXAMPLE_SIZE*uData->nExamples;
-  if( (err=cudaMalloc((void**) &uData->d_example, exSize)) != cudaSuccess) {
-    fprintf(stderr,"CUDA error: %s\n", cudaGetErrorString(err));
-    exit(-1);
-  }
-  if( (err=cudaMalloc((void**) &uData->d_param, sizeof(float)*N_PARAM)) != cudaSuccess) {
-    fprintf(stderr,"CUDA error: %s\n", cudaGetErrorString(err));
-    exit(-1);
-  }
-  if( (err=cudaMalloc((void**) &uData->d_out, sizeof(float))) != cudaSuccess) {
-    fprintf(stderr,"CUDA error: %s\n", cudaGetErrorString(err));
-    exit(-1);
-  }
-  err=cudaMemcpy(uData->d_example, uData->example, exSize, cudaMemcpyHostToDevice);
-  if( err != cudaSuccess) {
-    fprintf(stderr,"CUDA error (cudaMemcpy example): %s\n", cudaGetErrorString(err));
-    exit(-1);
-  }
-#endif
 #ifdef __INTEL_OFFLOAD
   int nDevices =_Offload_number_of_devices();
 
@@ -262,7 +246,6 @@ void offloadData(userData_t *uData)
   uData->timeDataLoad = getTime() - startOffload;
 #endif
 }
-
 
 // loads the binary file of the form:
 //    nInput, nOutput, nExamples
@@ -335,12 +318,68 @@ void init(char*filename, userData_t *uData)
   // Note: the in just allocates memory on the device
 #pragma offload target(mic:MIC_DEV) in(example: length(Xsiz) ALLOC) in(param : length(N_PARAM) ALLOC)
   {} 
+#pragma acc enter data copyin(example[0:Xsiz])
 
-#ifdef USE_CUDA
-  offloadData(uData);
-#endif
   uData->timeDataLoad = getTime() - startTime;
 
   if(fn!=stdin) fclose(fn);
 }
+
+void init_noIO(int _nExamples, userData_t *uData)
+{
+  FILE *fn=stdin;
+
+#ifdef MPI_NUM_COPROC_PER_NODE
+#ifdef USE_CUDA
+  //fprintf(stderr,"Using GPU %d\n", mpiRank % MPI_NUM_COPROC_PER_NODE);
+  cudaSetDevice(mpiRank % MPI_NUM_COPROC_PER_NODE);
+#endif
+#endif
+
+  // read the header information
+  double startTime=getTime();
+  int32_t nInput=N_INPUT, nOutput=N_OUTPUT;
+  int32_t nExamples = _nExamples;
+
+  if(nExamples <= 0) {
+    fprintf(stderr,"Number of examples incorrect!\n");
+    exit(1);
+  }
+  uData->nExamples = nExamples;
+
+  // aligned allocation of the data
+  uData->example=(float*) memalign(64,nExamples*EXAMPLE_SIZE*sizeof(float));
+  if(!uData->example) {
+    fprintf(stderr,"Not enough memory for examples!\n");
+    exit(1);
+  }
+  // aligned allocation of the on-device parameters
+  uData->param=(float*) memalign(64,N_PARAM*sizeof(float));
+  if(!uData->param) {
+    fprintf(stderr,"Not enough memory for the parameters!\n");
+    exit(1);
+  }
+
+  // randomize the data
+  for(int exIndex=0; exIndex < uData->nExamples; exIndex++) {
+    for(int i=0; i < nInput; i++)
+        uData->example[IN(i,uData->nExamples, exIndex)] = ((float)random())/((float)RAND_MAX);
+    for(int i=0; i < nOutput; i++)
+      uData->example[OUT(i,uData->nExamples, exIndex)] = ((float)random())/((float)RAND_MAX);
+  }
+
+  // offload the data
+  double startOffload=getTime();
+  __declspec(align(64)) float * restrict example = uData->example; // compiler workaround
+  __declspec(align(64)) float * restrict param = uData->param; // compiler workaround
+  int Xsiz = uData->nExamples*EXAMPLE_SIZE; // compiler workaround
+  // Note: the in just allocates memory on the device
+#pragma offload target(mic:MIC_DEV) in(example: length(Xsiz) ALLOC) in(param : length(N_PARAM) ALLOC)
+  {}
+#pragma acc enter data copyin(example[0:Xsiz])
+
+  uData->timeDataLoad = getTime() - startTime;
+}
+
+
 

@@ -1,8 +1,3 @@
-// Define key GPU characteristics
-#define NUM_SMX 15
-#define NUM_ACTIVE_SMX_QUEUE 16
-#define VEC_LEN 32 
-
 //undefine __declspec
 #define __declspec(x)
 
@@ -40,28 +35,11 @@ inline double getTime() { return(omp_get_wtime());}
 
 #pragma offload_attribute (push, target (mic))
 
-// helper macros to index into the example array
-#define IN(i,nExamples,j)  (i*nExamples+j)
-#define OUT(i,nExamples,j)  ((i+N_INPUT)*nExamples+j)
+#define restruct
+#define __device__
+#define __host__
 
-// Define the Sigmoid
-#ifdef USE_LINEAR
-char *desc="generated_PCA_func LINEAR()";
-inline float G(float x) { return( x ) ;} 
-#define G_ESTIMATE 0 
-#elif USE_TANH
-char *desc="generated_func tanh()";
-inline float G(float x) { return( tanhf(x) ) ;} 
-#define G_ESTIMATE 7 // estimate 7 flops for G
-#elif LOGISTIC
-char *desc="generated func logistic()";
-inline float G(float x) { return( 1.f/(1.f+expf(-x)) ) ;} 
-#define G_ESTIMATE 7 // estimate flops for G
-#else // Use Elliott function
-char *desc="generated func Eliott activation: x/(1+fabsf(x))";
-inline float G(float x) { return( x/(1.f+fabsf(x)) ) ;} 
-#define G_ESTIMATE 3 // estimate flops for G
-#endif
+#include "myCommon.h"
 
 // This file defines the function to be evaluated
 #include "fcn.h"
@@ -115,6 +93,16 @@ double _objFunc(unsigned int n,  const double * restrict x,
       err += partial;
     }
   }
+#elif CALL_CUDA
+{
+  extern double cuda_objFunc(float*, float *, int, double *);
+  double out[1];
+#pragma acc data pcreate(out[0:1])
+#pragma acc host_data use_device(out, example, param)
+  {
+    err = cuda_objFunc(param, example, nExamples, out); // initializes out to zero
+  }
+}
 #else
   {
     err=0.;
