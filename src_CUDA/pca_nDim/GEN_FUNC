@@ -1,0 +1,10 @@
+#!/bin/bash
+DIM=16
+../../Python/genFunc.py -n_i $DIM -n_h1 10 -n_bottle 1 -n_h3 10  \
+> generatedFunc.hpp
+echo "DIM="$DIM > common.sh
+
+make -j
+
+sh RUN
+

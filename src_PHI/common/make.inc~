@@ -1,0 +1,9 @@
+CXX=g++
+CXXFLAGS= -O3 -fopenmp -std=c++11 
+CXXFLAGS += -D LAYOUT_SOA
+#CXXFLAGS += -D NDEBUG
+
+LDFLAGS = -fopenmp
+
+INCLUDES= -I ../../install_gcc/include -I . -I ../src -I ../../src 
+LD_LIBRARIES= -L ../../install_gcc/lib 

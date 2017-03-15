@@ -1,0 +1,182 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 17.0.0.098 Build 20160721
+
+Compiler options: -I ../../install_mic/include -I . -I ../src -I ../../src -c -O3 -qopenmp -std=c++11 -xMIC-AVX512 -mmic -qopt-report=5 -D LAYOUT_SOA -D NDEBUG -fp-model fast=2
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: main(int, char **)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (main(int, char **)) [1/5=20.0%] genData.cc(34,1)
+  -> EXTERN: (36,5) fprintf(FILE *, const char *, ...)
+  -> EXTERN: (37,5) exit(int)
+  -> EXTERN: (42,6) strcmp(const char *, const char *)
+  -> EXTERN: (43,8) fopen(const char *, const char *)
+  -> EXTERN: (46,5) fprintf(FILE *, const char *, ...)
+  -> EXTERN: (47,5) exit(int)
+  -> INLINE (MANUAL): (49,14) atoi(const char *) (isz = 7) (sz = 14)
+    -> EXTERN: /usr/include/stdlib.h:(280,16) strtol(const char *, char **, int)
+  -> INLINE (MANUAL): (50,20) atof(const char *) (isz = 5) (sz = 12)
+    -> EXTERN: /usr/include/bits/stdlib-float.h:(28,10) strtod(const char *, char **)
+  -> EXTERN: (51,3) srand(unsigned int)
+  -> INLINE (MANUAL): (51,9) atoi(const char *) (isz = 7) (sz = 14)
+    -> EXTERN: /usr/include/stdlib.h:(280,16) strtol(const char *, char **, int)
+  -> INLINE: (52,3) genData(FILE *, int, float) (isz = 95) (sz = 104)
+    -> EXTERN: (16,22) fwrite(const void *, size_t, size_t, FILE *)
+    -> EXTERN: (17,23) fwrite(const void *, size_t, size_t, FILE *)
+    -> EXTERN: (18,28) fwrite(const void *, size_t, size_t, FILE *)
+    -> INLINE (MANUAL): (21,24) f_rand() (isz = 7) (sz = 12)
+      -> EXTERN: (8,13) rand()
+    -> INLINE (MANUAL): (22,28) f_rand() (isz = 7) (sz = 12)
+      -> EXTERN: (8,13) rand()
+    -> INLINE (MANUAL): (26,32) f_rand() (isz = 7) (sz = 12)
+      -> EXTERN: (8,13) rand()
+    -> EXTERN: (28,5) fwrite(const void *, size_t, size_t, FILE *)
+    -> EXTERN: (29,5) fwrite(const void *, size_t, size_t, FILE *)
+  -> EXTERN: (54,20) fclose(FILE *)
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at genData.cc(20,3) inlined into genData.cc(52,3)
+   remark #15382: vectorization support: call to function rand() cannot be vectorized   [ genData.cc(8,13) ]
+   remark #15382: vectorization support: call to function rand() cannot be vectorized   [ genData.cc(8,13) ]
+   remark #15382: vectorization support: call to function rand() cannot be vectorized   [ genData.cc(8,13) ]
+   remark #15382: vectorization support: call to function fwrite(const void *, size_t, size_t, FILE *) cannot be vectorized   [ genData.cc(28,5) ]
+   remark #15382: vectorization support: call to function fwrite(const void *, size_t, size_t, FILE *) cannot be vectorized   [ genData.cc(29,5) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization
+   remark #15346: vector dependence: assumed OUTPUT dependence between call:rand() (8:13) and call:fwrite(const void *, size_t, size_t, FILE *) (29:5)
+   remark #15346: vector dependence: assumed OUTPUT dependence between call:fwrite(const void *, size_t, size_t, FILE *) (29:5) and call:rand() (8:13)
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+genData.cc(34,1):remark #34051: REGISTER ALLOCATION : [main] genData.cc:34
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   63[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm31 k0-k7]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   13[ rax rdx rcx rsi rdi r12-r14 zmm0-zmm4]
+        
+    Routine temporaries
+        Total         :     107
+            Global    :      33
+            Local     :      74
+        Regenerable   :      45
+        Spilled       :       5
+        
+    Routine stack
+        Variables     :      24 bytes*
+            Reads     :       2 [0.00e+00 ~ 0.0%]
+            Writes    :       7 [1.23e+01 ~ 4.9%]
+        Spills        :      40 bytes*
+            Reads     :       7 [2.17e+01 ~ 8.6%]
+            Writes    :       5 [5.66e+00 ~ 2.2%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: f_rand()
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (f_rand()) genData.cc(7,23)
+
+===========================================================================
+
+Begin optimization report for: genData(FILE *, int, float)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (genData(FILE *, int, float)) [5/5=100.0%] genData.cc(11,1)
+  -> EXTERN: (16,22) fwrite(const void *, size_t, size_t, FILE *)
+  -> EXTERN: (17,23) fwrite(const void *, size_t, size_t, FILE *)
+  -> EXTERN: (18,28) fwrite(const void *, size_t, size_t, FILE *)
+  -> INLINE (MANUAL): (21,24) f_rand() (isz = 7) (sz = 12)
+    -> EXTERN: (8,13) rand()
+  -> INLINE (MANUAL): (22,28) f_rand() (isz = 7) (sz = 12)
+    -> EXTERN: (8,13) rand()
+  -> INLINE (MANUAL): (26,32) f_rand() (isz = 7) (sz = 12)
+    -> EXTERN: (8,13) rand()
+  -> EXTERN: (28,5) fwrite(const void *, size_t, size_t, FILE *)
+  -> EXTERN: (29,5) fwrite(const void *, size_t, size_t, FILE *)
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at genData.cc(20,3)
+   remark #15382: vectorization support: call to function rand() cannot be vectorized   [ genData.cc(8,13) ]
+   remark #15382: vectorization support: call to function rand() cannot be vectorized   [ genData.cc(8,13) ]
+   remark #15382: vectorization support: call to function rand() cannot be vectorized   [ genData.cc(8,13) ]
+   remark #15382: vectorization support: call to function fwrite(const void *, size_t, size_t, FILE *) cannot be vectorized   [ genData.cc(28,5) ]
+   remark #15382: vectorization support: call to function fwrite(const void *, size_t, size_t, FILE *) cannot be vectorized   [ genData.cc(29,5) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization
+   remark #15346: vector dependence: assumed OUTPUT dependence between call:rand() (8:13) and call:fwrite(const void *, size_t, size_t, FILE *) (29:5)
+   remark #15346: vector dependence: assumed OUTPUT dependence between call:fwrite(const void *, size_t, size_t, FILE *) (29:5) and call:rand() (8:13)
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+genData.cc(11,1):remark #34051: REGISTER ALLOCATION : [_Z7genDataP8_IO_FILEif] genData.cc:11
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   63[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm31 k0-k7]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   13[ rax rdx rcx rsi rdi r12-r14 zmm0-zmm4]
+        
+    Routine temporaries
+        Total         :      58
+            Global    :      22
+            Local     :      36
+        Regenerable   :      23
+        Spilled       :       5
+        
+    Routine stack
+        Variables     :      20 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       5 [1.30e+01 ~ 5.1%]
+        Spills        :      40 bytes*
+            Reads     :       7 [2.29e+01 ~ 9.0%]
+            Writes    :       5 [8.90e+00 ~ 3.5%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================

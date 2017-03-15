@@ -1,0 +1,5 @@
+TIME=30 #seconds
+SIZE=30000000
+rm -f xor.dat param.dat
+./genData.x - $SIZE 0.0 | ./nloptTrain.x - param.dat $TIME
+./genData.x - 1 0 | ../../src_OMP/xor/pred.x - param.dat 

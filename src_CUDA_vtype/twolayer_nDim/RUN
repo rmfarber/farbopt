@@ -1,0 +1,17 @@
+#!/bin/bash
+
+. ./common.sh
+echo DIMENSIONALITY is  $DIM
+
+TIME=10 #seconds
+B=0.1
+C=0.2
+TAU=17
+NPRED=100
+SEED1=1234
+SIZE=30000000
+rm -f train.dat param.dat
+./genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
+   | ./nloptTrain.x - param.dat $TIME
+
+#./genData.x - $NPRED 0 $SEED2 $DIM | ./pred.x - param.dat  > pred.csv
