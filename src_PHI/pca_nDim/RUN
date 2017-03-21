@@ -1,3 +1,6 @@
+echo "************ Don't forget to set the number of cores! **********"
+echo "************ Currently set to " $OMP_NUM_THREADS
+
 #!/bin/bash
 
 . ./common.sh
@@ -9,5 +12,5 @@ SEED1=1234
 SEED2=123
 SIZE=30000000
 rm -f train.dat param.dat
-./genData.x - $SIZE 0.01 $SEED1 $DIM | ./nloptTrain.x - param.dat $TIME
+./genData.x - $SIZE 0.01 $SEED1 $DIM | numactl -m 1 ./nloptTrain.x - param.dat $TIME
 ./genData.x - $NPRED 0 $SEED2 $DIM | ./pred.x - param.dat  > pred.csv
