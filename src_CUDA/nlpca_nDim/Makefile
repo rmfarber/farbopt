@@ -1,4 +1,5 @@
 include ../common/make.inc
+include ./make.inc
 
 TARGETS= nloptTrain.x pred.x genData.x
 VPATH=../../src
