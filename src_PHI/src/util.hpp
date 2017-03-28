@@ -222,6 +222,18 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   ret=fread(&nExamples,sizeof(uint32_t), 1, fn);
   assert(ret == 1);
 
+#define DEBUG
+#ifdef DEBUG
+  {
+    FILE *fn=fopen("data.hdr","w");
+    ret=fwrite(&nInput,sizeof(uint32_t), 1, fn);
+    assert(ret == 1);
+    ret=fwrite(&nOutput,sizeof(uint32_t), 1, fn);
+    assert(ret == 1);
+    ret=fwrite(&nExamples,sizeof(uint32_t), 1, fn);
+    fclose(fn);
+  }
+#endif
   vector<pair<int,int> > examplesPerDevice;
 
 #ifdef USE_MPI
@@ -235,33 +247,49 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 	 << " in datafile (" << datafile << ")"
 	 << endl;
     cout << "*******************" << endl;
-    cout << "Using MPI" << " numTasks " <<  nTasks << " OMP_NUM_THREADS " << omp_get_num_threads() << endl;
+#pragma omp parallel
+    if(omp_get_thread_num() == 0)
+      cout << "Using MPI" << " numTasks " <<  nTasks << " OMP_NUM_THREADS " << omp_get_num_threads() << endl;
   }
   
-  int rankExample = nExamples/getMPI_tasks();
-  int lastrankExample = (nTasks*rankExample < nExamples)?(nExamples - (nTasks-1)*rankExample):rankExample;
-  if(rank+1 == nTasks) { // last rank so have to adjust to nExamples
-    rankExample = lastrankExample;
-  }
-  assert(rankExample*(nTasks-1) == nExamples);
-  // test if seekable
-  if(fseek(fn, (nInput+nOutput)*rankExample, SEEK_SET) != 0) {
-    cerr << "Cannot seek to location" << endl;
-    exit(1);
-  }
-  // seek to location
-  nExamples = rankExample;
-  if(rank==0) { // master
-    cout << "\t examples per MPI rank " << rankExample << endl; 
-    if(nTasks > 1) cout << "\t last MPI rank examples " << lastrankExample << endl; 
+  {
+    // Set rankExamples vector to the number of examples per rank.
+    vector<int> rankExample(nTasks);
+    for(int i=0; i < nTasks; i++) rankExample[i] = nExamples/nTasks;
+
+    for(int i=0; i < nExamples % nTasks; i++) rankExample[i]++;
+
+    uint32_t offset=0;
+    for(int i=0; i < rank; i++) offset += rankExample[i];
+    // test if seekable
+    // seek to location
+    if(fseek(fn, (nInput+nOutput)*offset*sizeof(REAL_T), SEEK_CUR) != 0) {
+      cerr << "Cannot seek to location" << endl;
+      exit(1);
+    }
+    
+    if(rank==0) { // master
+      cout << "\tExamples MPI rank 0 " << rankExample[0] 
+	   << "\tExamples MPI rank " << (nTasks-1) << " " << rankExample[nTasks-1] << endl; 
+    }
+
+    offset=0;
+    for(int i=0; i < nTasks; i++) offset += rankExample[i];
+    assert(offset == nExamples);
+
+    // set nExamples to the right one for the current rank
+    nExamples = rankExample[rank];
   }
 #else
-    cout << "nInput " << nInput
-	 << " nOutput " << nOutput
-	 << " nExamples " << nExamples
-	 << " in datafile (" << datafile << ")"
-	 << endl;
-    cout << "*******************" << endl;
+#pragma omp parallel
+  if(omp_get_thread_num() == 0)
+    cout << "OMP_NUM_THREADS " << omp_get_num_threads() << endl;
+  cout << "nInput " << nInput
+       << " nOutput " << nOutput
+       << " nExamples " << nExamples
+       << " in datafile (" << datafile << ")"
+       << endl;
+  cout << "*******************" << endl;
 #endif
 
   
@@ -286,6 +314,25 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 	//if(ret != sizeof(REAL_T)) throw "data read failed";
       }
     }
+#ifdef DEBUG
+  {
+    char fname[256];
+    sprintf(fname,"data.%03d",rank);
+    cerr << fname << endl;
+    FILE *fn=fopen(fname,"w");
+    for(int exIndex=0; exIndex < myExamples; exIndex++) {
+      for(int i=0; i < nInput; i++) {
+	ret=fwrite(& oFunc->InputExample(exIndex,i),1, sizeof(REAL_T), fn);
+	//if(ret != sizeof(REAL_T)) throw "data read failed";
+      }
+      for(int i=0; i < nOutput; i++)  {
+	ret=fwrite(& oFunc->KnownExample(exIndex,i),1, sizeof(REAL_T), fn);
+	//if(ret != sizeof(REAL_T)) throw "data read failed";
+      }
+    }
+    fclose(fn);
+  }
+#endif
     int dev = examplesPerDevice[i].first;
     
     if(examplesPerDevice[i].first < 0) {
