@@ -22,10 +22,11 @@ int main(int argc, char* argv[])
   }
 
   if(argc > 3) { maxRuntime = atoi(argv[3]); }
-  cout << "Max Runtime is " << maxRuntime << " (seconds)" << endl;
   
   ObjFuncVec<DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > *oFuncVec =
     init< DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > (argv[1], argv[2],false);
+
+  cout << "Max Runtime is " << maxRuntime << " (seconds)" << endl;
 
   // algorithm and dimensionality
   int nParam = oFuncVec->nParam;
