@@ -1,0 +1,10 @@
+#!/bin/bash
+
+NPRED=100
+SEED1=1234
+SEED2=123
+SIZE=30000000
+rm -f train.dat param.dat
+gcc genData.cc -o a.out.x
+./a.out.x train.dat $SIZE 0.01 $SEED1
+rm a.out.x
