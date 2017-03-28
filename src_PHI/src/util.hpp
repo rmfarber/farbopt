@@ -229,12 +229,17 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   rank = getMPI_rank();
 
   if(rank==0) { // master
+    cout << "nInput " << nInput
+	 << " nOutput " << nOutput
+	 << " nExamples " << nExamples
+	 << " in datafile (" << datafile << ")"
+	 << endl;
     cout << "*******************" << endl;
     cout << "Using MPI" << " numTasks " <<  nTasks << " OMP_NUM_THREADS " << omp_get_num_threads() << endl;
   }
   
   int rankExample = nExamples/getMPI_tasks();
-  int lastrankExample = (nTasks*rankExample > nExamples)?nExamples - (nTasks-1)*rankExample:nExamples;
+  int lastrankExample = (nTasks*rankExample < nExamples)?(nExamples - (nTasks-1)*rankExample):rankExample;
   if(rank+1 == nTasks) { // last rank so have to adjust to nExamples
     rankExample = lastrankExample;
   }
@@ -246,18 +251,19 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   }
   // seek to location
   nExamples = rankExample;
-  if(rank==0) // master
+  if(rank==0) { // master
     cout << "\t examples per MPI rank " << rankExample << endl; 
+    if(nTasks > 1) cout << "\t last MPI rank examples " << lastrankExample << endl; 
+  }
 #else
-    cout << "*******************" << endl;
-#endif
-
-  if(rank==0) // master
     cout << "nInput " << nInput
 	 << " nOutput " << nOutput
 	 << " nExamples " << nExamples
 	 << " in datafile (" << datafile << ")"
 	 << endl;
+    cout << "*******************" << endl;
+#endif
+
   
   // construct example vector
   examplesPerDevice.push_back(make_pair(-1,nExamples));
