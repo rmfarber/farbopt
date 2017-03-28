@@ -11,6 +11,23 @@
 #include <omp.h>
 using namespace std;
 
+#ifdef USE_MPI
+
+#include "mpi.h"
+
+inline int getMPI_rank() {
+  int mpiRank;;
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpiRank);
+  return mpiRank;;
+}
+
+inline int getMPI_tasks() {
+  int numTasks;
+  MPI_Comm_size(MPI_COMM_WORLD,&numTasks);
+  return numTasks;
+}
+#endif
+
 inline double getTime() { return(omp_get_wtime());}
 
 template< typename REAL_T, typename myFcnInterest >
@@ -49,6 +66,14 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
 
   double startTime = getTime();
 
+#ifdef USE_MPI
+  if(getMPI_rank() == 0) { // master
+    int op=1;
+    MPI_Bcast(&op, 1, MPI_INT, 0, MPI_COMM_WORLD); // Send the master op code
+    MPI_Bcast((void*) x, N_PARAM, MPI_DOUBLE, 0, MPI_COMM_WORLD); // Send the parameters
+  }
+#endif
+
 #pragma simd
   for(int i=0; i < n; ++i)
     oFuncVec->param[i] = x[i];
@@ -66,6 +91,15 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
     
     err += oFunc->func();
   }
+
+#ifdef USE_MPI
+  double partialError = err;
+  double totalError=0.;
+  if(getMPI_rank() == 0) { // master
+    MPI_Reduce(&partialError, &totalError, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD); // get the totalError
+    err = totalError;
+  }
+#endif
   
   double timeDelta = getTime() - startTime;
   if(oFuncVec->nFunctionCalls == 1) { // ignore 0 function call
@@ -79,6 +113,27 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
 
   return err;
 }
+
+#ifdef USE_MPI
+void startClient(double *xFromMPI, void *my_func_data)
+{
+  int op;
+  double partialError,sum;
+
+  
+  for(;;) { // loop until the master says I am done
+    MPI_Bcast(&op, 1, MPI_INT, 0, MPI_COMM_WORLD); // receive the op code
+    if(op==0) { // we are done, normal exit
+      break;
+    }
+    MPI_Bcast(xFromMPI, N_PARAM, MPI_DOUBLE, 0, MPI_COMM_WORLD); // receive the parameters
+    partialError = nloptFunc(N_PARAM,  xFromMPI, NULL, my_func_data);
+    MPI_Reduce(&partialError, &sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  }
+  MPI_Finalize();
+}
+#endif
+
 
 int readParam(const char* filename, int nParam, float* param)
 {
@@ -119,6 +174,10 @@ void writeParam(const char *filename, int nParam, float *x)
   fclose(fn);
 }
 
+// mpiInit here 
+// send filename to each rank and number of ranks
+// each rank opens file and reads header, then seeks to offset = nExamples/nRanks * exampleSize
+
 template< typename REAL_T, typename myFcnInterest >
 ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 					  const char * paramfile,
@@ -126,6 +185,17 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 {
   FILE *fn=stdin;
 
+#ifdef USE_MPI
+  {
+    int ret = MPI_Init(NULL,NULL);
+    
+    if (ret != MPI_SUCCESS) {
+      printf ("Error in MPI_Init()!\n");
+      MPI_Abort(MPI_COMM_WORLD, ret);
+    }
+  }
+#endif
+  
   cout << "*******************" << endl;
 
   ObjFuncVec<REAL_T, myFcnInterest >  *oFuncVec
@@ -144,6 +214,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   uint32_t nInput, nOutput;
   uint32_t nExamples;
   int ret;
+  int rank=0;
   
   // read header
   ret=fread(&nInput,sizeof(uint32_t), 1, fn);
@@ -153,19 +224,39 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   ret=fread(&nExamples,sizeof(uint32_t), 1, fn);
   assert(ret == 1);
 
-  cout << "nInput " << nInput
-       << " nOutput " << nOutput
-       << " nExamples " << nExamples
-       << " in datafile (" << datafile << ")"
-       << endl;
-
-  //read parameter file if it exists otherwise randomize the paramters
-  for(int i=0; i < oFuncVec->nParam; i++) oFuncVec->param[i]
-					    = 0.4*(rand()/(double)RAND_MAX);
-  readParam(paramfile, oFuncVec->nParam, oFuncVec->param);
-
   vector<pair<int,int> > examplesPerDevice;
 
+#ifdef USE_MPI
+  int nTasks = getMPI_tasks();
+  rank = getMPI_rank();
+
+  if(rank==0) // master
+    cout << "Using MPI" << " numTasks " <<  nTasks << " OMP_NUM_THREADS " << omp_get_num_threads() << endl;
+  
+  int rankExample = nExamples/getMPI_tasks();
+  int lastrankExample = (nTasks*rankExample > nExamples)?nExamples - (nTasks-1)*rankExample:nExamples;
+  if(rank+1 == nTasks) { // last rank so have to adjust to nExamples
+    rankExample = lastrankExample;
+  }
+  assert(rankExample*(nTasks-1) == nExamples);
+  // test if seekable
+  if(fseek(fn, (nInput+nOutput)*rankExample, SEEK_SET) != 0) {
+    cerr << "Cannot seek to location" << endl;
+    exit(1);
+  }
+  // seek to location
+  nExamples = rankExample;
+  if(rank==0) // master
+    cout << "\t examples per MPI rank " << rankExample << endl; 
+#endif
+
+  if(rank==0) // master
+    cout << "nInput " << nInput
+	 << " nOutput " << nOutput
+	 << " nExamples " << nExamples
+	 << " in datafile (" << datafile << ")"
+	 << endl;
+  
   // construct example vector
   examplesPerDevice.push_back(make_pair(-1,nExamples));
 
@@ -201,6 +292,19 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   if(fn!=stdin)
     fclose(fn);
   
+#ifdef USE_MPI
+  if(getMPI_rank() > 0) {
+    vector<double> x(N_PARAM);
+    startClient(&x[0], (void *) oFuncVec);
+    exit(0); // normal client exit
+  }
+#endif
+
+  //read parameter file if it exists otherwise randomize the paramters
+  for(int i=0; i < oFuncVec->nParam; i++) oFuncVec->param[i]
+					    = 0.4*(rand()/(double)RAND_MAX);
+  readParam(paramfile, oFuncVec->nParam, oFuncVec->param);
+
   assert(oFuncVec->vec.size() > 0);
   {
     myFcnInterest fi;
@@ -240,6 +344,13 @@ void fini(const char * paramFilename,
 #endif
 
   writeParam(paramFilename, oFuncVec->nParam, oFuncVec->param);
+#ifdef USE_MPI
+  {
+    int op=0;
+    MPI_Bcast(&op, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Finalize();
+  }
+#endif
 
   delete oFuncVec;
 }

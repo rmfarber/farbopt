@@ -29,8 +29,8 @@ mpi: $(MPI_TARGETS)
 
 -include $(OBJS:%.o=%.d)
 
-mpiNloptTrain.o: mpiNloptTrain.cc
-	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $(MPI_INCLUDES)  $< 
+mpiNloptTrain.o: nloptTrain.cc
+	$(CXX) -D USE_MPI $(CXXFLAGS) $(INCLUDES) $(MPI_INCLUDES)  ../../src/nloptTrain.cc -c -o mpiNloptTrain.o
 mpiNloptTrain.x: mpiNloptTrain.o
 	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $(MPI_LD_LIBRARIES) $< -o $@ -lnlopt 
 
