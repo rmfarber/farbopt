@@ -222,8 +222,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   ret=fread(&nExamples,sizeof(uint32_t), 1, fn);
   assert(ret == 1);
 
-#define DEBUG
-#ifdef DEBUG
+#ifdef DEBUG_DATA_PARTITIONING
   {
     FILE *fn=fopen("data.hdr","w");
     ret=fwrite(&nInput,sizeof(uint32_t), 1, fn);
@@ -314,7 +313,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 	//if(ret != sizeof(REAL_T)) throw "data read failed";
       }
     }
-#ifdef DEBUG
+#ifdef DEBUG_DATA_PARTITIONING
   {
     char fname[256];
     sprintf(fname,"data.%03d",rank);

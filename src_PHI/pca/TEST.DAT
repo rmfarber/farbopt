@@ -1,4 +1,0 @@
-echo "************ Don't forget to set the number of cores! **********"
-echo "************ Currently set to " $OMP_NUM_THREADS
-SIZE=60000001
-./genData.x - $SIZE 0.01 123 > train.dat
