@@ -196,8 +196,6 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   }
 #endif
   
-  cout << "*******************" << endl;
-
   ObjFuncVec<REAL_T, myFcnInterest >  *oFuncVec
     = new ObjFuncVec<REAL_T, myFcnInterest >;
 
@@ -230,8 +228,10 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   int nTasks = getMPI_tasks();
   rank = getMPI_rank();
 
-  if(rank==0) // master
+  if(rank==0) { // master
+    cout << "*******************" << endl;
     cout << "Using MPI" << " numTasks " <<  nTasks << " OMP_NUM_THREADS " << omp_get_num_threads() << endl;
+  }
   
   int rankExample = nExamples/getMPI_tasks();
   int lastrankExample = (nTasks*rankExample > nExamples)?nExamples - (nTasks-1)*rankExample:nExamples;
@@ -248,6 +248,8 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   nExamples = rankExample;
   if(rank==0) // master
     cout << "\t examples per MPI rank " << rankExample << endl; 
+#else
+    cout << "*******************" << endl;
 #endif
 
   if(rank==0) // master
