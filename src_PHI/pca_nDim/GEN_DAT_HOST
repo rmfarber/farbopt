@@ -7,7 +7,11 @@ NPRED=100
 SEED1=1234
 SEED2=123
 SIZE=30000000
-rm -f train.dat param.dat
-gcc genData.cc -o a.out.x
-./a.out.x train.dat $SIZE 0.01 $SEED1 $DIM
-rm a.out.x
+rm -f train.dat
+GENDAT=`echo $PWD  | sed -r "s/src_(.*)\//src_OMP\//"`
+if [ ! -f ${GENDAT}/genData.x ]; then
+   echo "File not found"
+   (cd ${GENDAT}; make genData.x)
+fi
+
+${GENDAT}/genData.x train.dat $SIZE 0.01 $SEED1 $DIM
