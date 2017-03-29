@@ -9,6 +9,6 @@
 module load intel intel-mpi
 
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-TIME=10 #seconds
+TIME=30 #seconds
 srun -N $SLURM_JOB_NUM_NODES --ntasks-per-node=1 -c $SLURM_CPUS_PER_TASK numactl -m 1 ./mpiNloptTrain.x train.dat param.dat $TIME
 
