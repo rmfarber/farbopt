@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 {
   uint32_t maxRuntime = 120*60;
   if(argc < 3) {
-    fprintf(stderr,"Use: datafile paramFile MaxRuntime (seconds)\n");
+    fprintf(stderr,"Use: datafile paramFile [MaxRuntime (s)] [checkpoint interval (s)]\n");
     return -1;
   }
 
@@ -26,7 +26,12 @@ int main(int argc, char* argv[])
   ObjFuncVec<DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > *oFuncVec =
     init< DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > (argv[1], argv[2],false);
 
-  cout << "Max Runtime is " << maxRuntime << " (seconds)" << endl;
+  cout << "Max Runtime is " << maxRuntime << " seconds" << endl;
+
+  if(argc > 4) {
+    oFuncVec->setCheckPointInterval(atof(argv[4])); 
+    cout << "checkpoint interval is " << atof(argv[4]) << " seconds" << endl;
+  }
 
   // algorithm and dimensionality
   int nParam = oFuncVec->nParam;
@@ -61,6 +66,8 @@ int main(int argc, char* argv[])
     printf("\tfound minimum %0.10g ret %d\n", minf,ret);
   }
   
+  for(int i=0; i < nParam; i++) x[i] = oFuncVec->param[i];
+
   fini< DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> >(argv[2], oFuncVec);
   nlopt_destroy(opt);
 

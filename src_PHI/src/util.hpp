@@ -32,6 +32,12 @@ inline double getTime() { return(omp_get_wtime());}
 
 template< typename REAL_T, typename myFcnInterest >
 struct ObjFuncVec {
+private:
+  string paramfileName;
+  double prevTime, last_err;
+  int checkpointInterval;
+
+public:
   int nParam;
   REAL_T *param;
   vector< ObjFcn<REAL_T, myFcnInterest>* > vec;
@@ -49,10 +55,56 @@ struct ObjFuncVec {
 
     nFunctionCalls = 0;
     minTime = maxTime = dataLoadTime = timeObjFunction = 0.;
+    checkpointInterval=0; // default is no checkpoint
+    prevTime = 0.;
+    last_err=0.;
   }
   ~ObjFuncVec()
   {
     delete [] param;
+  }
+  void setParamFilename(const char *fname)
+  {
+    paramfilename = string(fname);
+    paramfilename.erase(paramfilename.find_last_of(".". strimg::npos));
+  }
+  // checkpoint every interval of runtime
+  void setCheckPointInterval(int interval_seconds)
+  {
+    if(interval_seconds < 0) throw "invalid interval_seconds specified";
+#ifdef USE_MPI
+    if(getMPI_rank() == 0) { // master
+      checkpointInterval = interval_seconds;
+    }
+#else
+    checkpointInterval = interval_seconds;
+#endif
+  }
+
+  string getParamCheckPointName()
+  {
+    time_t rawtime;
+    struct tm timeinfo;
+    
+    time (&rawtime);
+    gmtime_r (&rawtime, &timeinfo);
+    
+    char buffer [80];
+    strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", &timeinfo);
+    char err_s[80];
+    sprintf(err_s, ".err-%.10lf",err);
+    return(paramfileName+buffer+err_s+".dat");
+  }
+  void writeCheckpoint(double curTime)
+  {
+    if(last_err == 0.) last_err = err;
+
+    if(checkpointInterval && nFunctionCalls && (err <= last_err) 
+       && (((curTime - prevTime) >= checkpointInterval) || curTime==0.)) {
+      writeParam(getParamCheckPointName().c_str(),nParam, param);
+      prevTime = getTime();
+      last_err = err;
+    }
   }
 };
 
@@ -101,7 +153,8 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   }
 #endif
   
-  double timeDelta = getTime() - startTime;
+  double curTime = getTime();
+  double timeDelta = curTime - startTime;
   if(oFuncVec->nFunctionCalls == 1) { // ignore 0 function call
     oFuncVec->minTime = oFuncVec->maxTime = timeDelta;
   } 
@@ -110,6 +163,8 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   oFuncVec->maxTime = max(timeDelta, oFuncVec->maxTime);
   oFuncVec->nFunctionCalls++;
   oFuncVec->err = err;
+
+  oFuncVec->writeCheckpoint(curTime);
 
   return err;
 }
@@ -367,6 +422,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 	 << " with G() " << fi.gFcnName() << endl;
   }
   
+  oFuncVec->setCheckPointInterval(2);
   return(oFuncVec);
 }
 
@@ -398,6 +454,7 @@ void fini(const char * paramFilename,
 #endif
 
   writeParam(paramFilename, oFuncVec->nParam, oFuncVec->param);
+  oFuncVec->writeCheckpoint(0.);
 #ifdef USE_MPI
   {
     int op=0;
