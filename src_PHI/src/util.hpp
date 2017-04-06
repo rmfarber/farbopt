@@ -33,7 +33,7 @@ inline double getTime() { return(omp_get_wtime());}
 template< typename REAL_T, typename myFcnInterest >
 struct ObjFuncVec {
 private:
-  string paramfileName;
+  string paramFilename;
   double prevTime, last_err;
   int checkpointInterval;
 
@@ -65,8 +65,8 @@ public:
   }
   void setParamFilename(const char *fname)
   {
-    paramfilename = string(fname);
-    paramfilename.erase(paramfilename.find_last_of(".". strimg::npos));
+    paramFilename = fname;
+    paramFilename.erase(paramFilename.find_last_of(".", string::npos));
   }
   // checkpoint every interval of runtime
   void setCheckPointInterval(int interval_seconds)
@@ -90,10 +90,10 @@ public:
     gmtime_r (&rawtime, &timeinfo);
     
     char buffer [80];
-    strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", &timeinfo);
+    strftime(buffer, 80, ".utc-%Y_%m_%d_%H_%M_%S", &timeinfo);
     char err_s[80];
     sprintf(err_s, ".err-%.10lf",err);
-    return(paramfileName+buffer+err_s+".dat");
+    return(paramFilename+buffer+err_s+".dat");
   }
   void writeCheckpoint(double curTime)
   {
@@ -262,6 +262,8 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
     exit(1);
   }
 
+  oFuncVec->setParamFilename(paramfile);
+
   // read the header information
   double startTime=getTime();
   uint32_t nInput, nOutput;
@@ -422,7 +424,6 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 	 << " with G() " << fi.gFcnName() << endl;
   }
   
-  oFuncVec->setCheckPointInterval(2);
   return(oFuncVec);
 }
 
