@@ -395,8 +395,6 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   }
 #endif
   
-  cout << "*******************" << endl;
-
   ObjFuncVec<REAL_T, myFcnInterest >  *oFuncVec
     = new ObjFuncVec<REAL_T, myFcnInterest >;
 
