@@ -1,18 +1,25 @@
 include ../common/make.inc
 include ./make.inc
 
-TARGETS= nloptTrain.x pred.x genData.x
+TARGETS= nloptTrain.x pred.x genData.x 
+MPI_TARGETS= mpiNloptTrain.x
+
 VPATH=../../src
 OBJS = $(TARGETS:.x=.o)
 
 all: $(TARGETS)
+ifdef MPI_INCLUDES
+	make mpi
+endif
 
-%.o: %.c Makefile ../common/make.inc
+mpi: $(MPI_TARGETS)
+
+%.o: %.c Makefile ../common/make.inc ./make.inc
 	$(CC) -std=c99 -c  $< 
-%.o: %.cc Makefile ../common/make.inc
+%.o: %.cc Makefile ../common/make.inc ./make.inc
 	$(CXX) -c $(CXXFLAGS) $(INCLUDES)  $< 
 %.x: %.o
-	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $< -o $@ -lnlopt -laccapi -laccg -laccn -laccg2 -ldl
+	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $< -o $@ -lnlopt
 
 %.d: %.cc
 	@g++ -fopenmp $(INCLUDES) -MM -MP -MT $*.o $< -o $@
@@ -22,9 +29,14 @@ all: $(TARGETS)
 
 -include $(OBJS:%.o=%.d)
 
+mpiNloptTrain.o: nloptTrain.cc nloptTrain.o
+	$(CXX) -D USE_MPI $(CXXFLAGS) $(INCLUDES) $(MPI_INCLUDES)  ../../src/nloptTrain.cc -c -o mpiNloptTrain.o
+mpiNloptTrain.x: mpiNloptTrain.o
+	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $< -o $@ $(MPI_LD_LIBRARIES) -lnlopt 
+
 clean:
-	$(RM) *.x *.dat *.d *.o
+	$(RM) *.x *.dat *.d *.o MPI.o* *.png *.txt *.optrpt
 allclean:
-	$(RM) *~
+	$(RM) *~ *.csv
 	-make clean
 
