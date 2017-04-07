@@ -438,7 +438,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
 
 #ifdef USE_MPI
   int nTasks = getMPI_tasks();
-  rank = getMPI_rank();
+  int rank = getMPI_rank();
 
   if(rank==0) { // master
     cout << "nInput " << nInput
