@@ -45,7 +45,6 @@ public:
   ~Matrix()
   {
     if(data_) {
-      //delete[] data_;
       free(data_);
     }
   }

@@ -136,8 +136,9 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   
   // RUN on host if needed (possibly one task per thread)
   double err=0.;
+  uint32_t vec_size = oFuncVec->vec.size();
   // nested parallelism as lower loop in func() is highly parallel 
-  for(int i=0; i < oFuncVec->vec.size(); i++) {
+  for(int i=0; i < vec_size; i++) {
     ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
     if(oFunc->devID >= 0) continue; 
     
@@ -236,6 +237,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   FILE *fn=stdin;
 
 #ifdef USE_MPI
+#warning "MPI is untested"
   {
     int ret = MPI_Init(NULL,NULL);
     
@@ -397,8 +399,13 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
       int sizeInput=myExamples*nInput;
       int sizeKnown=myExamples*nOutput;
 
-      #pragma acc update device(pInput[0:sizeInput])
-      #pragma acc update device(pKnown[0:sizeKnown])
+      //#pragma acc update device(pInput[0:sizeInput])
+      //#pragma acc update device(pKnown[0:sizeKnown])
+#pragma acc enter data copyin(pInput[0:sizeInput])
+#pragma acc enter data copyin(pKnown[0:sizeKnown])
+
+	std::cerr << "Uploading data sizeInput " << sizeInput <<  std::endl;
+	std::cerr << "Uploading data sizeKnown " << sizeKnown <<  std::endl;
     }
   }
   oFuncVec->dataLoadTime = getTime() - startTime;
