@@ -32,7 +32,7 @@ mpi: $(MPI_TARGETS)
 mpiNloptTrain.o: nloptTrain.cc nloptTrain.o
 	$(CXX) -D USE_MPI $(CXXFLAGS) $(INCLUDES) $(MPI_INCLUDES)  ../../src/nloptTrain.cc -c -o mpiNloptTrain.o
 mpiNloptTrain.x: mpiNloptTrain.o
-	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $(MPI_LD_LIBRARIES) $< -o $@ -lnlopt 
+	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $< -o $@ $(MPI_LD_LIBRARIES) -lnlopt 
 
 clean:
 	$(RM) *.x *.dat *.d *.o MPI.o* *.png *.txt *.optrpt
