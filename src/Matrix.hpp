@@ -55,8 +55,9 @@ public:
     assert(data_ == NULL); // only implemented for changing from zero size. 
     nRows = rows;
     nCols = cols;
-    data_ = new REAL_T[rows * cols];
     rowOffset=fixedRow=0;
+    //data_ = new REAL_T[rows * cols];
+    data_ = (REAL_T *) aligned_alloc(64,sizeof(REAL_T)*nRows*nCols);
   }
   
   FCN_ATTRIBUTES
