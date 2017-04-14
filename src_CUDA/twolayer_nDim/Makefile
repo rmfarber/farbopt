@@ -1,7 +1,7 @@
 include ../common/make.inc
 include ./make.inc
 
-TARGETS= nloptTrain.x pred.x genMackeyGlass.x 
+TARGETS= nloptTrain.x pred.x genMackeyGlass.x genScale.x doScale.x
 MPI_TARGETS= mpiNloptTrain.x
 
 VPATH=../../src

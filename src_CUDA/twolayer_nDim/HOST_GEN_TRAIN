@@ -1,0 +1,36 @@
+#!/bin/bash
+
+. ./common.sh
+echo DIMENSIONALITY is  $DIM
+
+GENDAT=`echo $PWD  | sed -r "s/src_(.*)\//src_CUDA\//"`
+if [ ! -f ${GENDAT}/genMackeyGlass.x ]; then
+   echo "File not found"
+   (cd ${GENDAT}; make genMackeyGlass.x genScale.x doSCALE.x)
+fi
+
+B=0.1
+C=0.2
+TAU=17
+NPRED=100
+SEED1=1234
+SEED2=2346
+SIZE=3000
+rm -f train.dat scale.hpp
+
+$GENDAT/genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
+   | $GENDAT/genScale.x - > $GENDAT/scale.hpp
+
+if [ ! -f ${GENDAT}/genMackeyGlass.x ]; then
+   echo "File not found"
+   (cd ${GENDAT}; make genMackeyGlass.x genScale.x doSCALE.x)
+fi
+
+$GENDAT/genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
+   | $GENDAT/doScale.x 0.1 0.9 \
+   > train.dat
+
+$GENDAT/genMackeyGlass.x - $NPRED $B $C $TAU $DIM $SEED2 \
+   | $GENDAT/doScale.x 0.1 0.9 \
+   > pred.dat
+
