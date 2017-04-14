@@ -16,15 +16,7 @@ NPRED=100
 SEED1=1234
 SEED2=2346
 SIZE=3000
-rm -f train.dat scale.hpp
-
-$GENDAT/genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
-   | $GENDAT/genScale.x - > $GENDAT/scale.hpp
-
-if [ ! -f ${GENDAT}/genMackeyGlass.x ]; then
-   echo "File not found"
-   (cd ${GENDAT}; make genMackeyGlass.x genScale.x doSCALE.x)
-fi
+rm -f train.dat
 
 $GENDAT/genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
    | $GENDAT/doScale.x 0.1 0.9 \
