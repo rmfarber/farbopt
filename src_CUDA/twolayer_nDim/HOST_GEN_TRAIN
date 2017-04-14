@@ -15,7 +15,7 @@ TAU=17
 NPRED=100
 SEED1=1234
 SEED2=2346
-SIZE=3000
+SIZE=30000000
 rm -f train.dat
 
 $GENDAT/genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
