@@ -233,11 +233,10 @@ struct generatedFcnInterest {
    o += h2_7 * p[168];
    o += h2_8 * p[169];
    o += h2_9 * p[170];
-   //o = G(o);
    if(IS_PRED == true) {
       (*pred)(exampleNumber,0) = o;
    }
-   o -= in[0];
+   o -= (*pred)(exampleNumber,0);
    sum += o*o;
    return(sum);
 }
