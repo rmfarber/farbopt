@@ -4,7 +4,5 @@
 > generatedFunc.hpp
 echo "DIM="$DIM > common.sh
 
-#make -j
-
-#sh RUN
+make -j
 
