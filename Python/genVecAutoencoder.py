@@ -137,8 +137,8 @@ for i in range(0,nInput):
     if((i+1) == nInput):
        print "      return 0.;"
     print "   }"
-    #print "   o -= in[%d];" % (i)
-    print "   o = DATA_TYPE::sub(o, in[%d]);" % (i)
+    #print "   o -= (*pred)(exampleNumber,%d);" % (i)
+    print "   o = DATA_TYPE::sub(o, (*pred)(exampleNumber,%d));" % (i)
     print "   sum += DATA_TYPE::reduce(DATA_TYPE::mult(o,o));"
     flopEstimate += 3
 
