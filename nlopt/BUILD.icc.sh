@@ -13,6 +13,7 @@ else
    wget http://ab-initio.mit.edu/nlopt/$FILE
 fi
 
+   rm -fr $DIR
    tar -xzf $FILE
    cd $DIR
    cd nlopt-2.4.2/

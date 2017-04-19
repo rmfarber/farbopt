@@ -13,7 +13,7 @@ echo "have file"
 else
    wget http://ab-initio.mit.edu/nlopt/$FILE
 fi
-
+   rm -fr $DIR
    tar -xzf $FILE
    cd $DIR
    export CFLAGS="-O3"
