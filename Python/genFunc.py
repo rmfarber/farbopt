@@ -126,7 +126,7 @@ for i in range(0,nInput):
     if((i+1) == nInput):
        print "      return 0.;"
     print "   }"
-    print "   o -= in[%d];" % (i)
+    print "   o -= (*pred)(exampleNumber,%d);" % (i)
     print "   sum += o*o;"
     flopEstimate += 3
 

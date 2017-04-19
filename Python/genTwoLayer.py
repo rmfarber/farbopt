@@ -111,7 +111,8 @@ for i in range(0,nOutput):
         index += 1
         flopEstimate += 2
 
-    print "   o = G(o);"
+    # Use a linear output
+    #print "   o = G(o);"
     gCalls += 1
 
     print "   if(IS_PRED == true) {"
@@ -119,7 +120,7 @@ for i in range(0,nOutput):
     if((i+1) == nInput):
        print "      return 0.;"
     print "   }"
-    print "   o -= in[%d];" % (i)
+    print "   o -= (*pred)(exampleNumber,%d);" % (i)
     print "   sum += o*o;"
     flopEstimate += 3
 
