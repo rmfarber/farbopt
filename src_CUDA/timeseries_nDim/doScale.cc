@@ -13,10 +13,7 @@ using namespace std;
 
 inline float rescale(float val, float minVal, float maxVal, float minRange, float maxRange)
 {
-  val = 2.f*(val-minVal)/(maxVal-minVal) - (maxVal-minVal); // -1 to 1
-  assert(val >= -1.f && val <= 1.f);
-  val *= (maxRange-minRange);
-  val -= minRange;
+  val = (maxRange-minRange)*((val-minVal)/(maxVal-minVal)) + minRange; // minRange to maxRange
   assert(val >= minRange && val <= maxRange);
   return(val);
 }
