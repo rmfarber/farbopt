@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
   for(int i=0; i < nExamples; i++) {
     fread(yOut, sizeof(float), (nInput+nOutput), fin);
     
-#pragma omp parallel for
+    //#pragma omp parallel for
+#pragma simd
     for(int j=0; j < nInput+nOutput; j++) {
       yOut[j] = rescale(yOut[j], MIN_VAL, MAX_VAL, minRange, maxRange);
     }
