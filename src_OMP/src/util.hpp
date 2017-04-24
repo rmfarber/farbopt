@@ -103,6 +103,7 @@ public:
        && (((curTime - prevTime) >= checkpointInterval) || curTime==0.)) {
       extern void writeParam(const char *, int , float *);
       writeParam(getParamCheckPointName().c_str(),nParam, param);
+      writeParam((paramFilename+".dat").c_str(),nParam, param);
       prevTime = getTime();
       last_err = err;
     }
