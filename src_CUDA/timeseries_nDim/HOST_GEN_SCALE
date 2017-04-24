@@ -4,12 +4,14 @@
 
 B=0.1
 C=0.2
+M=3
+DELTA=6
 TAU=17
 NPRED=100
 SEED1=1234
-SIZE=30000000
+SEED2=2346
+SIZE=150000000
 
-SCALE_SIZE=`expr $SIZE \* 10`
-echo "Finding min and max for examples=" $SCALE_SIZE
-./genMackeyGlass.x - $SIZE $B $C $TAU $DIM $SEED1 \
+./genMackeyGlass.x - $SIZE $B $C $TAU $M $DELTA $SEED1 \
    | ./genScale.x - > scale.hpp
+
