@@ -136,7 +136,7 @@ struct generatedFcnInterest {
    if(IS_PRED == true) {
       (*pred)(exampleNumber,0) = o;
    }
-   o -= (*pred)(exampleNumber,0);
+   o -= in[0];
    sum += o*o;
    o = p[72];
    o += h3_0 * p[73];
@@ -153,7 +153,7 @@ struct generatedFcnInterest {
       (*pred)(exampleNumber,1) = o;
       return 0.;
    }
-   o -= (*pred)(exampleNumber,1);
+   o -= in[1];
    sum += o*o;
    return(sum);
 }
