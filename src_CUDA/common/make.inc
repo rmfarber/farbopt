@@ -11,6 +11,6 @@ CXXFLAGS += -use_fast_math
 LDFLAGS = -Xcompiler="-fopenmp"
 LDFLAGS += -arch=sm_52
 
-INCLUDES= -I ../../lib/nlopt_gcc/include -I . -I ../src -I ../../src -I /usr/local/cuda/include
-LD_LIBRARIES= -L ../../lib/nlopt_gcc/lib -L /usr/local/cuda/lib64 -lcuda
+INCLUDES= -I ../../lib/nlopt_nvcc/include -I . -I ../src -I ../../src -I /usr/local/cuda/include
+LD_LIBRARIES= -L ../../lib/nlopt_nvcc/lib -L /usr/local/cuda/lib64 -lcuda
 
