@@ -2,5 +2,5 @@
 #ARCH_DIR=$(HOME)/new/farbopt/src_CUDA
 
 ARCH_DIR=..
-CXXFLAGS += -D ELLIOTT
+CXXFLAGS += -D USE_TANH
 

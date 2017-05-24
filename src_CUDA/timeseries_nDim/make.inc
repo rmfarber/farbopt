@@ -1,2 +1,0 @@
-CXXFLAGS += -D USE_TANH
-

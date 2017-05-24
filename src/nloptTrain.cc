@@ -35,17 +35,18 @@ int main(int argc, char* argv[])
 
   // algorithm and dimensionality
   int nParam = oFuncVec->nParam;
-  nlopt_opt opt = nlopt_create(NLOPT_LN_PRAXIS, nParam);
-  printf("Using NLOPT_LN_PRAXIS\n");
+
+  nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, nParam);
+  printf("Using NLOPT_LN_BOBYQA\n");
 
   // NOTE: alternative optimization methods ...
-  //opt = nlopt_create(NLOPT_LN_NEWUOA, oFunc->nParam());
+  //nlopt_opt opt = nlopt_create(NLOPT_LN_PRAXIS, nParam);
+  //printf("Using NLOPT_LN_PRAXIS\n");
+  //nlopt_opt opt = nlopt_create(NLOPT_LN_NEWUOA, nParam);
   //printf("Using NLOPT_LN_NEWUOA\n");
-  //opt = nlopt_create(NLOPT_LN_COBYLA, oFunc->nParam());
+  //nlopt_opt opt = nlopt_create(NLOPT_LN_COBYLA, nParam);
   //printf("Using NLOPT_LN_COBYLA\n");
-  //opt = nlopt_create(NLOPT_LN_BOBYQA, oFunc->nParam());
-  //printf("Using NLOPT_LN_BOBYQA\n");
-  //opt = nlopt_create(NLOPT_LN_AUGLAG, oFunc->nParam());
+  //nlopt_opt opt = nlopt_create(NLOPT_LN_AUGLAG, nParam);
   //printf("Using NLOPT_LN_AUGLAG\n");
 
   nlopt_set_min_objective(opt, nloptFunc, (void*) oFuncVec);
