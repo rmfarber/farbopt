@@ -56,6 +56,7 @@ public:
   double minTime, maxTime;
   double dataLoadTime;
   double err;
+  uint32_t totalExamples;
 
   ObjFuncVec()
   {
@@ -68,6 +69,7 @@ public:
     checkpointInterval=0; // default is no checkpoint
     prevTime = 0.;
     last_err=0.;
+    totalExamples=0;
   }
   ~ObjFuncVec()
   {
@@ -316,7 +318,9 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
 
   oFuncVec->writeCheckpoint(curTime);
 
-  return err;
+#warning "test that totalExamples using multiple GPUs and/or MPI is correct" << endl; 
+  //cerr << "TotalCudaExamples " << oFuncVec->totalExamples << endl;
+  return err/oFuncVec->totalExamples;
 }
 
 #ifdef USE_MPI
@@ -422,6 +426,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   assert(ret == 1);
   ret=fread(&nExamples,sizeof(uint32_t), 1, fn);
   assert(ret == 1);
+  oFuncVec->totalExamples=nExamples;
 
 #ifdef DEBUG_DATA_PARTITIONING
   {
@@ -495,6 +500,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   cout << "Using SOA layout" << endl;
 #endif
 
+  oFuncVec->totalExamples = nExamples;
   oFuncVec->cuda_PartitionLoadData(nExamples, hostOnly, nInput, nOutput,fn);
 
   oFuncVec->dataLoadTime = getTime() - startTime;
