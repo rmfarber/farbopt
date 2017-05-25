@@ -15,5 +15,6 @@ SIZE=30000000
 #if [ ! -f ${GENDAT}/pred.x ]; then
 #   (cd ${GENDAT}; make genData.x pred.x)
 #fi
+GENDAT=.
 
 ${GENDAT}/genData.x - $NPRED 0.01 $SEED1 $DIM | ${GENDAT}/pred.x - param.dat  > pred.csv
