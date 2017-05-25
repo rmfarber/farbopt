@@ -75,7 +75,7 @@ FCN_ATTRIBUTES
       d=fi.CalcOpt(i, param, &Input, &Known); 
       err += d*d;
     }
-    return err;
+    return err/nExamples;
   }
 
   FCN_ATTRIBUTES

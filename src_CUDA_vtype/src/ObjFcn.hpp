@@ -181,7 +181,7 @@ __host__
       double d=fi.CalcOpt(i, vparam, &Input, &Known); 
       err += d*d;
     }
-    return err;
+    return err/nExamples;
   }
 
   FCN_ATTRIBUTES
