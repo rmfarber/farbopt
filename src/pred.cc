@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
   ObjFcn<DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > *oFunc= oFuncVec->vec[0];
   assert(oFunc->devID < 0);
 
-  cout << "Objective Function: " << oFunc->name() << endl
-       << "Function of Interest: " << oFunc->FcnInterest_name()
-       << " with G() " << oFunc->FcnInterest_gFcnName() << endl;
+  //cout << "Objective Function: " << oFunc->name() << endl
+       //<< "Function of Interest: " << oFunc->FcnInterest_name()
+       //<< " with G() " << oFunc->FcnInterest_gFcnName() << endl;
 
   oFunc->offloadParam(oFuncVec->param);
 
