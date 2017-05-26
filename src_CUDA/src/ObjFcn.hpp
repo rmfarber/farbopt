@@ -134,8 +134,9 @@ FCN_ATTRIBUTES
     
     register double partial=0.;
     while(tid < Input.rows() ) {
-      double d=fi.CalcOpt(tid, param, &Input, &Known); 
-      partial += d*d;
+      partial += fi.CalcOpt(tid, param, &Input, &Known); 
+      //double d=fi.CalcOpt(tid, param, &Input, &Known); 
+      //partial += d*d;
       //partial += 1;
       tid += blockDim.x * gridDim.x;
     }
@@ -171,8 +172,7 @@ __host__
 
 #pragma omp parallel for reduction(+:err)
     for(int i=0; i < nExamples; ++i) {
-      double d=fi.CalcOpt(i, param, &Input, &Known); 
-      err += d*d;
+      err +=fi.CalcOpt(i, param, &Input, &Known); 
     }
     return err/nExamples;
   }

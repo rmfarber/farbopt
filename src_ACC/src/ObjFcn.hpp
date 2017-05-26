@@ -80,8 +80,7 @@ FCN_ATTRIBUTES
 #pragma omp parallel for reduction(+:err)
 #pragma acc parallel loop reduction(+:err)
     for(int i=0; i < nExamples; ++i) {
-      double d=fi.CalcOpt(i, param, &Input, &Known); 
-      err += d*d;
+      err += fi.CalcOpt(i, param, &Input, &Known); 
     }
     return err/nExamples;
   }
