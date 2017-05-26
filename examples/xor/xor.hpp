@@ -61,7 +61,7 @@ struct generatedFcnInterest {
       (*pred)(exampleNumber,0) = o;
       return 0.;
     } else  
-      return (o - (*pred)(exampleNumber,0)) * ((o - (*pred)(exampleNumber,0));
+      return (o - (*pred)(exampleNumber,0)) * (o - (*pred)(exampleNumber,0));
   }
   
   FCN_ATTRIBUTES
