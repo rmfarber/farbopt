@@ -3,11 +3,12 @@
 . ./common.sh
 echo DIMENSIONALITY is  $DIM
 
-GENDAT=`echo $PWD  | sed -r "s/src_(.*)\//src_CUDA\//"`
-if [ ! -f ${GENDAT}/genMackeyGlass.x ]; then
-   echo "File not found"
-   (cd ${GENDAT}; make genMackeyGlass.x genScale.x doSCALE.x)
-fi
+#GENDAT=`echo $PWD  | sed -r "s/src_(.*)\//src_CUDA\//"`
+#if [ ! -f ${GENDAT}/genMackeyGlass.x ]; then
+#   echo "File not found"
+#   (cd ${GENDAT}; make genMackeyGlass.x genScale.x doSCALE.x)
+#fi
+GENDAT=.
 
 B=0.1
 C=0.2
@@ -17,7 +18,7 @@ TAU=17
 NPRED=100
 SEED1=1234
 SEED2=2346
-SIZE=120000000
+SIZE=25000
 rm -f train.dat
 
 $GENDAT/genMackeyGlass.x - $SIZE $B $C $TAU $M $DELTA $SEED1 \
