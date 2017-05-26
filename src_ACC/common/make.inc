@@ -1,5 +1,5 @@
 CXX=pgc++
-CXXFLAGS= -O3 
+CXXFLAGS += -O3 
 #CXXFLAGS= -g
 CXXFLAGS += -acc
 CXXFLAGS += -std=c++11 -DLAYOUT_SOA
