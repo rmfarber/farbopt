@@ -1,5 +1,5 @@
 CXX=icc
-CXXFLAGS= -O3 -qopenmp  -std=c++11
+CXXFLAGS += -O3 -qopenmp  -std=c++11
 CXXFLAGS += -xMIC-AVX512
 #CXXFLAGS += -xhost
 CXXFLAGS += -mmic
