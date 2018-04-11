@@ -1,0 +1,17 @@
+#!/bin/bash
+
+. ./common.sh
+
+B=0.1
+C=0.2
+M=3
+DELTA=6
+TAU=17
+NPRED=100
+SEED1=1234
+SEED2=2346
+SIZE=150000000
+
+./genMackeyGlass.x - $SIZE $B $C $TAU $M $DELTA $SEED1 \
+   | ./genScale.x - > scale.hpp
+

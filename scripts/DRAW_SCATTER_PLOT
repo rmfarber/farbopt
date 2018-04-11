@@ -1,0 +1,6 @@
+TYPE=`basename $PWD`
+SCATTER_PNG=$TYPE"_scatter.png"
+#echo SCATTER_PNG
+
+sed '1,8d' pred.csv > scatter.txt
+gnuplot -e  "unset key; set term png; set output \""$SCATTER_PNG"\"; plot \"scatter.txt\" u 2:4"

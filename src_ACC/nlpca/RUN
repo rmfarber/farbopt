@@ -1,0 +1,6 @@
+TIME=30 #seconds
+NPRED=100
+SIZE=300000
+rm -f train.dat param.dat
+./genData.x - $SIZE 0.01 123 | ./nloptTrain.x - param.dat $TIME
+./genData.x - $NPRED 0 123 | ./pred.x - param.dat  > pred.csv
