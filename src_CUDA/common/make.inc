@@ -1,5 +1,5 @@
 CXX=nvcc
-CXXFLAGS += -O3 -w -Xcompiler="-fopenmp " -std=c++11 
+CXXFLAGS = -O3 -w -Xcompiler="-fopenmp " -std=c++11 
 CXXFLAGS += -D LAYOUT_SOA
 CXXFLAGS += -gencode arch=compute_61,code=sm_61
 CXXFLAGS += -x cu -D FCN_ATTRIBUTES="__host__ __device__"
