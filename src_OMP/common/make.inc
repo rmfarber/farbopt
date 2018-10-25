@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS = -O3 -fopenmp  -std=c++11
+CXXFLAGS += -fopenmp  -std=c++11
 #CXXFLAGS += -fopt-info-vec-missed
 CXXFLAGS += -fopt-info
 CXXFLAGS += -D LAYOUT_SOA

@@ -1,5 +1,5 @@
 CXX=nvcc
-CXXFLAGS= -O3 -Xcompiler="-fopenmp " -std=c++11 
+CXXFLAGS += -Xcompiler="-fopenmp " -std=c++11 
 //CXXFLAGS += -w
 CXXFLAGS += -D LAYOUT_SOA
 CXXFLAGS += -gencode arch=compute_52,code=sm_52

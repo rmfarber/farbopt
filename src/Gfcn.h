@@ -8,26 +8,28 @@
 #include <math.h>
 
 // Define the Sigmoid
-#ifdef ELLIOTT
+#if defined(ELLIOTT_ACTIVATION_FCN)
 
 #define G_DESC_STRING "Elliott activation: x/(1+fabsf(x))"
 FCN_ATTRIBUTES
 inline float G(float x) { return( x/(1.f+fabsf(x)) ) ;} 
 #define G_ESTIMATE 3 // estimate flops for G
 
-#elif USE_TANH
+#elif defined(TANH_ACTIVATION_FCN)
 
 #define G_DESC_STRING "tanh()"
 FCN_ATTRIBUTES
 inline float G(float x) { return( tanhf(x) ) ;} 
 #define G_ESTIMATE 7 // estimate 7 flops for G
 
-#elif LOGISTIC
+#elif defined(LOGISTIC_ACTIVATION_FCN)
 
 #define G_DESC_STRING "logistic()"
 FCN_ATTRIBUTES
 inline float G(float x) { return( 1.f/(1.f+expf(-x)) ) ;} 
-#elif ELU
+#define G_ESTIMATE 9 // estimate 7 flops for G
+
+#elif defined(ELU_ACTIVATION_FCN)
 
 #define G_DESC_STRING "Exponential linear unit(parameter a locked to 1.)"
 FCN_ATTRIBUTES
@@ -41,6 +43,7 @@ FCN_ATTRIBUTES
 FCN_ATTRIBUTES
 inline float G(float x) { return( x ) ;} 
 #define G_ESTIMATE 0 
+
 #endif
 
 #endif
