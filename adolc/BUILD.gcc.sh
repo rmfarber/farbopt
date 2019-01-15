@@ -18,7 +18,7 @@ fi
    cd $DIR
    export CFLAGS="-O3"
    export CXXFLAGS="-O3"
-   ./configure --prefix=`pwd`/../../lib --with-openmp-flag=-fopenmp
+   ./configure --prefix=`pwd`/../../lib/adolc_gcc --with-openmp-flag=-fopenmp
    make -j 8 install
 
 #This will install in the install_gcc library two levels up. This
