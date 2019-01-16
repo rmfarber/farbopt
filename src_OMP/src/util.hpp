@@ -46,6 +46,10 @@ public:
   double minTime, maxTime;
   double dataLoadTime;
   double err;
+#ifdef USE_GRAD
+  double timeGrad;
+  uint32_t nGradCalls;
+#endif
 
   ObjFuncVec()
   {
@@ -58,6 +62,10 @@ public:
     checkpointInterval=0; // default is no checkpoint
     prevTime = 0.;
     last_err=0.;
+#ifdef USE_GRAD
+    timeGrad=0.;
+    nGradCalls=0;
+#endif
   }
   ~ObjFuncVec()
   {
@@ -168,6 +176,23 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
 
   oFuncVec->writeCheckpoint(curTime);
 
+  if(grad != NULL) {
+#ifdef USE_GRAD
+    double startTime = getTime();
+    oFuncVec->nGradCalls++;
+    // TODO: This does not use the host-side data for the gradient
+    for(int i=0; i < oFuncVec->nParam; i++) grad[i]=0;
+    
+    for(int i=0; i < oFuncVec->vec.size(); i++) {
+      ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
+      oFunc->gen_grad(grad,x);
+    }
+    oFuncVec->timeGrad += getTime() - startTime;
+#else
+    printf("GRAD not used\n");
+    assert(false);
+#endif
+  }
   return err;
 }
 
@@ -455,6 +480,17 @@ void fini(const char * paramFilename,
 	 (totalFlops/(oFuncVec->minTime)/1.e9),
 	 (totalFlops/(oFuncVec->maxTime)/1.e9) );
 #endif
+#ifdef USE_GRAD
+  if(oFuncVec->nGradCalls > 0) {
+    printf("\tAveGradTime %g, nGradCalls %d, totalGradTime %g\n",
+	   (oFuncVec->nGradCalls==0)?0.:oFuncVec->timeGrad/oFuncVec->nGradCalls,
+	   oFuncVec->nGradCalls,
+	   oFuncVec->timeGrad );
+    printf("\tnFuncCalls/nGradCalls %3.2f\n",
+	   ((double)oFuncVec->nFunctionCalls)/((double) oFuncVec->nGradCalls));
+  }
+#endif
+  
 
   writeParam(paramFilename, oFuncVec->nParam, oFuncVec->param);
   oFuncVec->writeCheckpoint(0.);

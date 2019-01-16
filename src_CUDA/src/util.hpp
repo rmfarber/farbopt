@@ -57,6 +57,11 @@ public:
   double dataLoadTime;
   double err;
   uint32_t totalExamples;
+#ifdef USE_GRAD
+  double timeGrad;
+  uint32_t nGradCalls;
+  vector< ObjFcn<REAL_T, myFcnInterest>* > grad_data;
+#endif
 
   ObjFuncVec()
   {
@@ -70,6 +75,10 @@ public:
     prevTime = 0.;
     last_err=0.;
     totalExamples=0;
+#ifdef USE_GRAD
+    timeGrad=0.;
+    nGradCalls=0;
+#endif
   }
   ~ObjFuncVec()
   {
@@ -221,7 +230,12 @@ public:
 	       oFunc->warpSize, oFunc->multiProcessorCount, 
 	       oFunc->maxThreadsPerBlock);
 	
-	delete oFunc;
+#ifdef USE_GRAD
+	// if using a gradient, keep the data
+	this->grad_data.push_back(oFunc);
+#else
+	delete oFunc; // discard the host-side data to save space
+#endif
       }
     }
   }
@@ -232,7 +246,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
 {
   ObjFuncVec<float, generatedFcnInterest<float> >
     *oFuncVec = (ObjFuncVec<float, generatedFcnInterest<float> > *) f_data;
-  
+
   assert(n == oFuncVec->nParam);
   
   double startTime = getTime();
@@ -318,6 +332,24 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
 
   oFuncVec->writeCheckpoint(curTime);
 
+  if(grad != NULL) {
+#ifdef USE_GRAD
+    double startTime = getTime();
+    oFuncVec->nGradCalls++;
+    // TODO: This does not use the host-side data for the gradient
+    for(int i=0; i < oFuncVec->nParam; i++) grad[i]=0;
+    
+    for(int i=0; i < oFuncVec->grad_data.size(); i++) {
+      ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->grad_data[i];
+      oFunc->gen_grad(grad,x);
+    }
+    oFuncVec->timeGrad += getTime() - startTime;
+#else
+    printf("GRAD not used\n");
+    assert(false);
+#endif
+  }
+  
 #warning "test that totalExamples using multiple GPUs and/or MPI is correct" << endl; 
   //cerr << "TotalCudaExamples " << oFuncVec->totalExamples << endl;
   return err/oFuncVec->totalExamples;
@@ -558,7 +590,17 @@ void fini(const char * paramFilename,
 	 (totalFlops/(oFuncVec->minTime)/1.e9),
 	 (totalFlops/(oFuncVec->maxTime)/1.e9) );
 #endif
-
+#ifdef USE_GRAD
+  if(oFuncVec->nGradCalls > 0) {
+    printf("\tAveGradTime %g, nGradCalls %d, totalGradTime %g\n",
+	   (oFuncVec->nGradCalls==0)?0.:oFuncVec->timeGrad/oFuncVec->nGradCalls,
+	   oFuncVec->nGradCalls,
+	   oFuncVec->timeGrad );
+    printf("\tnFuncCalls/nGradCalls %3.2f\n",
+	   ((double)oFuncVec->nFunctionCalls)/((double) oFuncVec->nGradCalls));
+  }
+#endif
+  
   writeParam(paramFilename, oFuncVec->nParam, oFuncVec->param);
   oFuncVec->writeCheckpoint(0.);
 #ifdef USE_MPI

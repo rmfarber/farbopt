@@ -1,7 +1,11 @@
 #ifndef XOR_HPP
 #define XOR_HPP
 #include "Matrix.hpp"
+#ifdef USE_GRAD
+#include <adolc/adolc.h>
+#endif
 #include "Gfcn.h"
+
 
 #ifndef FCN_ATTRIBUTES
 #define FCN_ATTRIBUTES ""
@@ -78,5 +82,31 @@ struct generatedFcnInterest {
     return generic_fcn<false>(exampleNumber, p, I,
 			      const_cast< Matrix<REAL_T> *>(Known));
   }
+
+#ifdef USE_GRAD
+  adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
+			   const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  {
+    adouble h1;
+    adouble o;
+    adouble in[2];
+    adouble known[1];
+    
+    in[0] = mkparam((*I)(exampleNumber,0));
+    in[1] = mkparam((*I)(exampleNumber,1));
+    known[0] = mkparam( (*pred)(exampleNumber,0) );
+    
+    h1 = p[0];
+    o = p[1];
+    h1 += in[0] * p[2];
+    h1 += in[1] * p[3];
+    h1 = G_ad(h1);
+    o += in[0] * p[4];
+    o += in[1] * p[5];
+    o += h1 * p[6];
+    return (o - known[0]) * (o - known[0]);
+  }
+#endif
+  
 };
 #endif
