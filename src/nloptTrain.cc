@@ -36,8 +36,14 @@ int main(int argc, char* argv[])
   // algorithm and dimensionality
   int nParam = oFuncVec->nParam;
 
-  nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, nParam);
-  printf("Using NLOPT_LN_BOBYQA\n");
+  //nlopt_opt opt = nlopt_create(NLOPT_LD_SLSQP, nParam);
+  //printf("Using NLOPT_LD_SLSQP\n");
+
+  nlopt_opt opt = nlopt_create(NLOPT_LD_LBFGS, nParam);
+  printf("Using NLOPT_LD_LBFGS\n");
+
+  //nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, nParam);
+  //printf("Using NLOPT_LN_BOBYQA\n");
 
   // NOTE: alternative optimization methods ...
   //nlopt_opt opt = nlopt_create(NLOPT_LN_PRAXIS, nParam);
