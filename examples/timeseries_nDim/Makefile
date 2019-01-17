@@ -22,7 +22,7 @@ mpi: $(MPI_TARGETS)
 	$(CXX) $(LDFLAGS) $< -o $@ $(LD_LIBRARIES)
 
 %.d: %.cc
-	@g++ -fopenmp $(INCLUDES) -MM -MP -MT $*.o $< -o $@
+	@g++ -std=c++11 -fopenmp $(INCLUDES) -MM -MP -MT $*.o $< -o $@
 
 %.d: %.c
 	@gcc -std=c99 -fopenmp -MM -MP -MT $*.o $< -o $@
