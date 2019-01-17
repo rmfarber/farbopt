@@ -24,6 +24,9 @@ nH3=args.n_h3
 print """#ifndef PCA_HPP
 #define PCA_HPP
 #include "Matrix.hpp"
+#ifdef USE_GRAD
+#include <adolc/adolc.h>
+#endif
 #include "Gfcn.h"
 
 #ifndef FCN_ATTRIBUTES
@@ -133,6 +136,65 @@ for i in range(0,nInput):
 print "   return(sum);"
 print "}"
 print 
+print """
+  adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
+                           const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+"""
+print "{"
+print "   adouble in[%d];" % (nInput)
+
+for i in range(0,nInput):
+    print "   in[%d] = mkparam( (*I)(exampleNumber,%d) );" % (i,i)
+
+for i in range(0,nH1):
+   print "   adouble h1_%d = p[%d];" % (i,index)
+   index += 1
+
+#input to h1
+for i in range(0,nInput):
+    for j in range(0,nH1):
+        print "   h1_%d += in[%d] * p[%d];" % (j,i,index)
+        index += 1
+
+for j in range(0,nH1):
+    print "   h1_%d = G_ad(h1_%d);" % (j,j)
+   
+for i in range(0,nH2):
+   print "   adouble h2_%d = p[%d];" % (i,index)
+   index += 1
+   
+for i in range(0,nH1):
+    for j in range(0,nH2):
+        print "   h2_%d += h1_%d * p[%d];" % (j,i,index)
+        index += 1
+
+for i in range(0,nH3):
+   print "   adouble h3_%d = p[%d];" % (i,index)
+   index += 1
+   
+for i in range(0,nH2):
+    for j in range(0,nH3):
+        print "   h3_%d += h2_%d * p[%d];" % (j,i,index)
+        index += 1
+
+for j in range(0,nH3):
+    print "   h3_%d = G_ad(h3_%d);" % (j,j)
+   
+print "   adouble o,sum = 0.f;"
+
+for i in range(0,nInput):
+    print "   o = p[%d];" % (index)
+    index += 1
+    for j in range(0,nH3):
+        print "   o += h3_%d * p[%d];" % (j,index)
+        index += 1
+
+    print "   o -= in[%d];" % (i)
+    print "   sum += o*o;"
+
+print "   return(sum);"
+print "}"
+print
 print """
   FCN_ATTRIBUTES
   inline void CalcOutput(const uint32_t exampleNumber, const float *p,

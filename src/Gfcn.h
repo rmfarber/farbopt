@@ -58,7 +58,7 @@ FCN_ATTRIBUTES
 FCN_ATTRIBUTES
 inline float G(float x) { return( x ) ;} 
 #ifdef USE_GRAD
-adouble float G_ad(float x) { return( x ) ;} 
+adouble G_ad(adouble x) { return( x ) ;} 
 #endif
 #define G_ESTIMATE 0 
 
