@@ -15,11 +15,11 @@ endif
 mpi: $(MPI_TARGETS)
 
 %.o: %.c Makefile $(ARCH_DIR)/common/make.inc ./make.inc
-	$(CC) -std=c99 -c  $< 
+	$(CC) -std=c99 -c  $<
 %.o: %.cc Makefile $(ARCH_DIR)/common/make.inc ./make.inc
-	$(CXX) -c $(CXXFLAGS) $(INCLUDES)  $< 
+	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< 
 %.x: %.o
-	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $< -o $@ -lnlopt
+	$(CXX) $(LDFLAGS) $< -o $@ $(LD_LIBRARIES)
 
 %.d: %.cc
 	@g++ -std=c++11 -fopenmp $(INCLUDES) -MM -MP -MT $*.o $< -o $@
@@ -32,7 +32,7 @@ mpi: $(MPI_TARGETS)
 mpiNloptTrain.o: nloptTrain.cc nloptTrain.o
 	$(CXX) -D USE_MPI $(CXXFLAGS) $(INCLUDES) $(MPI_INCLUDES)  $(ARCH_DIR)/../src/nloptTrain.cc -c -o mpiNloptTrain.o
 mpiNloptTrain.x: mpiNloptTrain.o
-	$(CXX) $(LDFLAGS) $(LD_LIBRARIES) $< -o $@ $(MPI_LD_LIBRARIES) -lnlopt 
+	$(CXX) $(LDFLAGS)  $< -o $@ $(MPI_LD_LIBRARIES) $(LD_LIBRARIES)
 
 clean:
 	$(RM) *.x *.dat *.d *.o MPI.o* *.png *.txt *.optrpt
