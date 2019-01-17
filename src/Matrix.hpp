@@ -64,22 +64,14 @@ public:
   inline REAL_T& operator() (unsigned row, unsigned col)
   {
     assert(row < nRows && col < nCols);
-#ifdef LAYOUT_SOA
-    return data_[nRows * col + row];
-#else
     return data_[nCols * row + col];
-#endif
   }
   
   FCN_ATTRIBUTES
   inline REAL_T& operator() (unsigned row, unsigned col) const
   {
     assert(row < nRows && col < nCols);
-#ifdef LAYOUT_SOA
-    return data_[nRows * col + row];
-#else
     return data_[nCols * row + col];
-#endif
   }
   
 };
