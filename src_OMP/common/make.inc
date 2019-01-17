@@ -2,7 +2,6 @@ CXX=g++
 CXXFLAGS += -fopenmp  -std=c++11
 #CXXFLAGS += -fopt-info-vec-missed
 CXXFLAGS += -fopt-info
-CXXFLAGS += -D LAYOUT_SOA
 CXXFLAGS += -D USE_GRAD
 #CXXFLAGS += -D NDEBUG
 

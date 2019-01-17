@@ -528,10 +528,6 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
   cout << "*******************" << endl;
 #endif
 
-#ifdef LAYOUT_SOA
-  cout << "Using SOA layout" << endl;
-#endif
-
   oFuncVec->totalExamples = nExamples;
   oFuncVec->cuda_PartitionLoadData(nExamples, hostOnly, nInput, nOutput,fn);
 
