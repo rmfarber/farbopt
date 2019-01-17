@@ -136,6 +136,8 @@ for i in range(0,nInput):
 print "   return(sum);"
 print "}"
 print 
+
+index=0
 print """
   adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
                            const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)

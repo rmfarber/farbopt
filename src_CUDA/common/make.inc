@@ -8,7 +8,7 @@ CXXFLAGS += -gencode arch=compute_61,code=sm_61
 CXXFLAGS += -x cu -D FCN_ATTRIBUTES="__host__ __device__"
 CXXFLAGS += -rdc=true
 CXXFLAGS += -D USE_GRAD
-//CXXFLAGS += -D NDEBUG
+CXXFLAGS += -D NDEBUG
 CXXFLAGS += -use_fast_math
 //CXXFLAGS += -DUSE_CUDA_DEVICE=0
 
