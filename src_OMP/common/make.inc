@@ -1,8 +1,10 @@
 CXX=g++
 CXXFLAGS += -fopenmp  -std=c++11
-#CXXFLAGS += -fopt-info-vec-missed
+CXXFLAGS += -fopt-info-vec
 CXXFLAGS += -fopt-info
 CXXFLAGS += -D USE_GRAD
+CXXFLAGS += -march=native
+CXXFLAGS += -ffast-math
 #CXXFLAGS += -D NDEBUG
 
 LDFLAGS = -fopenmp
