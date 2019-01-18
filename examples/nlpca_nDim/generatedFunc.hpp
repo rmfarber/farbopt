@@ -36,27 +36,26 @@ struct generatedFcnInterest {
   
   template<bool IS_PRED>
   FCN_ATTRIBUTES
-  inline float generic_fcn(const uint32_t exampleNumber, const REAL_T *p,
-                           const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  inline float generic_fcn(const REAL_T *p, const REAL_T *I, REAL_T *pred)
 
 {
    float in[16];
-   in[0] = (*I)(exampleNumber,0);
-   in[1] = (*I)(exampleNumber,1);
-   in[2] = (*I)(exampleNumber,2);
-   in[3] = (*I)(exampleNumber,3);
-   in[4] = (*I)(exampleNumber,4);
-   in[5] = (*I)(exampleNumber,5);
-   in[6] = (*I)(exampleNumber,6);
-   in[7] = (*I)(exampleNumber,7);
-   in[8] = (*I)(exampleNumber,8);
-   in[9] = (*I)(exampleNumber,9);
-   in[10] = (*I)(exampleNumber,10);
-   in[11] = (*I)(exampleNumber,11);
-   in[12] = (*I)(exampleNumber,12);
-   in[13] = (*I)(exampleNumber,13);
-   in[14] = (*I)(exampleNumber,14);
-   in[15] = (*I)(exampleNumber,15);
+   in[0] = I[0];
+   in[1] = I[1];
+   in[2] = I[2];
+   in[3] = I[3];
+   in[4] = I[4];
+   in[5] = I[5];
+   in[6] = I[6];
+   in[7] = I[7];
+   in[8] = I[8];
+   in[9] = I[9];
+   in[10] = I[10];
+   in[11] = I[11];
+   in[12] = I[12];
+   in[13] = I[13];
+   in[14] = I[14];
+   in[15] = I[15];
    register float h1_0 = p[0];
    register float h1_1 = p[1];
    register float h1_2 = p[2];
@@ -291,7 +290,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[210];
    o += h3_9 * p[211];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,0) = o;
+      pred[0] = o;
    }
    o -= in[0];
    sum += o*o;
@@ -307,7 +306,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[221];
    o += h3_9 * p[222];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,1) = o;
+      pred[1] = o;
    }
    o -= in[1];
    sum += o*o;
@@ -323,7 +322,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[232];
    o += h3_9 * p[233];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,2) = o;
+      pred[2] = o;
    }
    o -= in[2];
    sum += o*o;
@@ -339,7 +338,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[243];
    o += h3_9 * p[244];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,3) = o;
+      pred[3] = o;
    }
    o -= in[3];
    sum += o*o;
@@ -355,7 +354,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[254];
    o += h3_9 * p[255];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,4) = o;
+      pred[4] = o;
    }
    o -= in[4];
    sum += o*o;
@@ -371,7 +370,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[265];
    o += h3_9 * p[266];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,5) = o;
+      pred[5] = o;
    }
    o -= in[5];
    sum += o*o;
@@ -387,7 +386,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[276];
    o += h3_9 * p[277];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,6) = o;
+      pred[6] = o;
    }
    o -= in[6];
    sum += o*o;
@@ -403,7 +402,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[287];
    o += h3_9 * p[288];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,7) = o;
+      pred[7] = o;
    }
    o -= in[7];
    sum += o*o;
@@ -419,7 +418,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[298];
    o += h3_9 * p[299];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,8) = o;
+      pred[8] = o;
    }
    o -= in[8];
    sum += o*o;
@@ -435,7 +434,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[309];
    o += h3_9 * p[310];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,9) = o;
+      pred[9] = o;
    }
    o -= in[9];
    sum += o*o;
@@ -451,7 +450,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[320];
    o += h3_9 * p[321];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,10) = o;
+      pred[10] = o;
    }
    o -= in[10];
    sum += o*o;
@@ -467,7 +466,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[331];
    o += h3_9 * p[332];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,11) = o;
+      pred[11] = o;
    }
    o -= in[11];
    sum += o*o;
@@ -483,7 +482,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[342];
    o += h3_9 * p[343];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,12) = o;
+      pred[12] = o;
    }
    o -= in[12];
    sum += o*o;
@@ -499,7 +498,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[353];
    o += h3_9 * p[354];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,13) = o;
+      pred[13] = o;
    }
    o -= in[13];
    sum += o*o;
@@ -515,7 +514,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[364];
    o += h3_9 * p[365];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,14) = o;
+      pred[14] = o;
    }
    o -= in[14];
    sum += o*o;
@@ -531,7 +530,7 @@ struct generatedFcnInterest {
    o += h3_8 * p[375];
    o += h3_9 * p[376];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,15) = o;
+      pred[15] = o;
       return 0.;
    }
    o -= in[15];
@@ -996,18 +995,16 @@ struct generatedFcnInterest {
 
 
   FCN_ATTRIBUTES
-  inline void CalcOutput(const uint32_t exampleNumber, const float *p,
-                         const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  inline void CalcOutput(const float *p, const REAL_T *I, REAL_T *pred)
   {
-    generic_fcn<true>(exampleNumber, p, I, pred);
+    generic_fcn<true>(p, I, pred);
   }
   
+#pragma omp declare simd
   FCN_ATTRIBUTES
-  inline float CalcOpt(const uint32_t exampleNumber, const float *p, 
-                       const Matrix<REAL_T> *I, const Matrix<REAL_T> *Known)
+  inline float CalcOpt(const float *p, const REAL_T *I, const REAL_T *Known)
   {
-    return generic_fcn<false>(exampleNumber, p, I,
-                              const_cast< Matrix<REAL_T> *>(Known));
+    return generic_fcn<false>(p, I, const_cast< REAL_T *>(Known));
   }
 };
 #endif

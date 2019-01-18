@@ -1,6 +1,0 @@
-for d in  `ls -l | egrep '^d' | awk '{print $9}'`
-do
-   echo $d
-   cd $d; make allclean; cd ..
-done
-

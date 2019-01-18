@@ -137,9 +137,13 @@ FCN_ATTRIBUTES
     if(threadIdx.x < WARP_SIZE)
       ssum[threadIdx.x] = 0.;
     
+    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
+    const float *I = *Input.getDataPtrAddr();
+    const float *K = *Known.getDataPtrAddr();
     register double partial=0.;
     while(tid < Input.rows() ) {
-      partial += fi.CalcOpt(tid, param, &Input, &Known); 
+      partial += fi.CalcOpt(param, &I[tid*N_INPUT], &K[tid*nOutput]); 
+      //partial += fi.CalcOpt(tid, param, &Input, &Known); 
       //double d=fi.CalcOpt(tid, param, &Input, &Known); 
       //partial += d*d;
       //partial += 1;
@@ -171,13 +175,17 @@ __host__
   inline double func()
   {
     uint32_t nExamples = Input.rows();
-    double err=0.;
+    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
+    const float *I = *Input.getDataPtrAddr();
+    const float *K = *Known.getDataPtrAddr();
     
     assert(nExamples > 0);
 
+    double err=0.;
 #pragma omp parallel for reduction(+:err)
+#pragma vector aligned
     for(int i=0; i < nExamples; ++i) {
-      err += fi.CalcOpt(i, param, &Input, &Known); 
+      err += fi.CalcOpt(param, &I[i*N_INPUT], &K[i*nOutput]); 
     }
     return err/nExamples;
   }
@@ -252,12 +260,16 @@ __host__
   inline void pred(Matrix<REAL_T> *Output)
   {
     uint32_t nExamples = Input.rows();
+    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
     assert(nExamples > 0);
     assert(Input.rows() == Output->rows() );
 
+    float *I = *Input.getDataPtrAddr();
+    float *O = *(Output->getDataPtrAddr());
+
 #pragma omp parallel for 
     for(int i=0; i < nExamples; ++i) {
-      fi.CalcOutput(i, param, &Input, Output); 
+      fi.CalcOutput(param, &I[i*N_INPUT], &O[i*nOutput]); 
     }
   }
 
