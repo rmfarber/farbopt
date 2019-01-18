@@ -32,15 +32,14 @@ struct generatedFcnInterest {
   
   template<bool IS_PRED>
   FCN_ATTRIBUTES
-  inline float generic_fcn(const uint32_t exampleNumber, const REAL_T *p,
-                           const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  inline float generic_fcn(const REAL_T *p, const REAL_T *I, REAL_T *pred)
 
 {
    float in[4];
-   in[0] = (*I)(exampleNumber,0);
-   in[1] = (*I)(exampleNumber,1);
-   in[2] = (*I)(exampleNumber,2);
-   in[3] = (*I)(exampleNumber,3);
+   in[0] = I[0];
+   in[1] = I[1];
+   in[2] = I[2];
+   in[3] = I[3];
    register float h1_0 = p[0];
    register float h1_1 = p[1];
    register float h1_2 = p[2];
@@ -234,23 +233,25 @@ struct generatedFcnInterest {
    o += h2_8 * p[169];
    o += h2_9 * p[170];
    if(IS_PRED == true) {
-      (*pred)(exampleNumber,0) = o;
+      pred[0] = o;
    }
-   o -= (*pred)(exampleNumber,0);
+   o -= pred[0];
    sum += o*o;
    return(sum);
 }
 
-#ifdef USE_GRAD
-adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
+
+  adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
                            const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
 
 {
    adouble in[4];
+   adouble known[1];
    in[0] = mkparam( (*I)(exampleNumber,0) );
    in[1] = mkparam( (*I)(exampleNumber,1) );
    in[2] = mkparam( (*I)(exampleNumber,2) );
    in[3] = mkparam( (*I)(exampleNumber,3) );
+   known[0] = mkparam( (*pred)(exampleNumber,0) );
    adouble h1_0 = p[0];
    adouble h1_1 = p[1];
    adouble h1_2 = p[2];
@@ -443,26 +444,23 @@ adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
    o += h2_7 * p[168];
    o += h2_8 * p[169];
    o += h2_9 * p[170];
-   o -= mkparam( (*pred)(exampleNumber,0) );
+   o -= known[0];
    sum += o*o;
    return(sum);
 }
-#endif
 
 
   FCN_ATTRIBUTES
-  inline void CalcOutput(const uint32_t exampleNumber, const float *p,
-                         const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  inline void CalcOutput(const float *p, const REAL_T *I, REAL_T *pred)
   {
-    generic_fcn<true>(exampleNumber, p, I, pred);
+    generic_fcn<true>(p, I, pred);
   }
   
+#pragma omp declare simd
   FCN_ATTRIBUTES
-  inline float CalcOpt(const uint32_t exampleNumber, const float *p, 
-                       const Matrix<REAL_T> *I, const Matrix<REAL_T> *Known)
+  inline float CalcOpt(const float *p, const REAL_T *I, const REAL_T *Known)
   {
-    return generic_fcn<false>(exampleNumber, p, I,
-                              const_cast< Matrix<REAL_T> *>(Known));
+    return generic_fcn<false>(p, I, const_cast< REAL_T *>(Known));
   }
 };
 #endif
