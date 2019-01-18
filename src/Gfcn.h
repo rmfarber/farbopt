@@ -25,7 +25,8 @@ adouble G_ad(adouble x) { return( x/(1.+fabs(x)) ) ;}
 
 #define G_DESC_STRING "tanh() estimated 7 flops to calc G"
 FCN_ATTRIBUTES
-inline float G(float x) { return( tanhf(x) ) ;} 
+//inline float G(float x) { return( tanhf(x) ) ;} 
+inline float G(float x) { float t1=expf(x); float t2=expf(-x); return( (t1-t2)/(t1+t2) ) ;} 
 #define G_ESTIMATE 7 // estimate 7 flops for G
 #ifdef USE_GRAD
 adouble G_ad(adouble x) { return( tanh(x) ) ;} 
