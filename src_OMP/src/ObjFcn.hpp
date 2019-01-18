@@ -57,6 +57,7 @@ private:
       
       trace_off();
     }
+#pragma omp barrier
   }
 #endif
 
@@ -165,6 +166,24 @@ FCN_ATTRIBUTES
 	int nInput=Input.cols();
 	int nOutput=Known.cols();
 	double *newData = new double[nInput+nOutput];
+
+	if (tag==1) {
+	  static int warning_count=0;
+	  size_t counts[1400];
+	  tapestats(tag,counts);
+	  
+	  if ((counts[4] > TBUFSIZE)&&(++warning_count < 3)) {
+	    fprintf(stderr,"tape size is %lu\n",counts[4]);
+	    fprintf(stderr,"WARNING (%d of %d):ADOLC TBUFSIZE is too small.\n",
+		    warning_count,3);
+	    fprintf(stderr, "Change ./.adolcrc increase gradient performance\n");
+	    size_t val;
+	    for(val=TBUFSIZE; val < counts[4]; val += TBUFSIZE)
+	      ;
+	    fprintf(stderr,"suggest:\n\"OBUFSIZE\" \"%lu\"\n\"LBUFSIZE\" \"%lu\"\n\"VBUFSIZE\" \"%lu\"\n\"TBUFSIZE\" \"%lu\"\n",val,val,val,val);
+	    fprintf(stderr,"ADOLC does not let me know if .adolcrc is correctly sized\n");
+	  }
+	}
       
 	for(int ex=tid; ex < nExamples; ex += nThread) {
 	  int index=0;

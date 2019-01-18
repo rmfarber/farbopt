@@ -4,6 +4,7 @@ CXXFLAGS += -fopt-info-vec
 CXXFLAGS += -fopt-info
 CXXFLAGS += -D USE_GRAD
 CXXFLAGS += -march=native
+CXXFLAGS += -finline-limit=100000000
 CXXFLAGS += -ffast-math
 #CXXFLAGS += -D NDEBUG
 
