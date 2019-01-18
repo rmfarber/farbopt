@@ -49,7 +49,7 @@ FCN_ATTRIBUTES
 inline float G(float x) { return( (x>0.f)?x:(expf(x)-1.f) ); } 
 #define G_ESTIMATE 7 // estimate flops for G
 #ifdef USE_GRAD
-adouble G_ad(adouble x) { return( (x>0.f)?x:(exp(x)-1.f) ); } 
+adouble G_ad(adouble x) {adouble tmp; condassign(tmp, x, x, exp(x)-1); return(tmp ); } 
 #endif
 
 #else // Use linear
