@@ -27,7 +27,43 @@ private:
   bool have_tape;
   
 #ifdef USE_GRAD
-  void createAdolcTape()
+  void createAdolcTape(int tag, bool warn)
+  {
+    uint32_t nExamples = Input.rows();
+
+    for(int i=0; i < fi.nParam(); i++) param[i]=0;
+    trace_on(tag,1);
+    adouble *ad_param = new adouble[fi.nParam()];
+    for (int i=0; i< fi.nParam(); i++) {
+      ad_param[i] <<= param[i];
+    }
+    
+    adouble ad_partial;
+    ad_partial = ad_partial + fi.ad_fcn(0, ad_param, &Input, &Known)/nExamples; 
+    
+    double err;
+    ad_partial >>= err;
+    
+    trace_off();
+    
+    if ( warn ) {
+      size_t counts[1400];
+      tapestats(tag,counts);
+      
+      if (counts[4] > TBUFSIZE) {
+	  fprintf(stderr,"tape size is %lu\n",counts[4]);
+	  fprintf(stderr,"WARNING: ADOLC compiled TBUFSIZE is too small.\n");
+	  fprintf(stderr,"ADOLC does not let me know if .adolcrc is correctly sized\n");
+	  fprintf(stderr, "Change ./.adolcrc to increase gradient performance\n");
+	  size_t val;
+	  for(val=TBUFSIZE; val < counts[4]; val += TBUFSIZE)
+	    ;
+	  fprintf(stderr,"suggest:\n\"OBUFSIZE\" \"%lu\"\n\"LBUFSIZE\" \"%lu\"\n\"VBUFSIZE\" \"%lu\"\n\"TBUFSIZE\" \"%lu\"\n",val,val,val,val);
+	}
+    }
+  }
+  
+  void parallel_createAdolcTape()
   {
     // create tape
 #pragma omp parallel firstprivate(ADOLC_OpenMP_Handler)
@@ -41,21 +77,7 @@ private:
       int tid=0;
 #endif
       int tag=tid+1;
-
-      for(int i=0; i < nParam(); i++) param[i]=0;
-      trace_on(tag,1);
-      adouble *ad_param = new adouble[fi.nParam()];
-      for (int i=0; i< fi.nParam(); i++) {
-	ad_param[i] <<= param[i];
-      }
-      
-      adouble ad_partial;
-      ad_partial = ad_partial + fi.ad_fcn(tid, ad_param, &Input, &Known)/nExamples; 
-      
-      double err;
-      ad_partial >>= err;
-      
-      trace_off();
+      createAdolcTape(tag, (tag==1)?true:false);
     }
 #pragma omp barrier
   }
@@ -141,13 +163,20 @@ FCN_ATTRIBUTES
     }
   }
 
+  //I don't understand if creating the tapes in parallel once is safe, but it works;
+#define CREATE_TAPES_ONCE
+  // Use this if errors occur
+  //#define CREATE_TAPES_ALWAYS 
   void gen_grad(double *grad, const double *param)
   {
 #ifdef USE_GRAD
-    if(!have_tape) {
-      createAdolcTape();
-      have_tape=true;
-    }
+
+#ifdef CREATE_TAPES_ONCE
+      if(have_tape==false) {
+	parallel_createAdolcTape();
+	have_tape=true;
+      }
+#endif
 
 #pragma omp parallel firstprivate(ADOLC_OpenMP_Handler)
     {
@@ -161,30 +190,19 @@ FCN_ATTRIBUTES
 #endif
       int tag=tid+1;
       if(tid < nExamples) {
+
+#ifdef CREATE_TAPES_ALWAYS
+	static int warn_user=true;
+	createAdolcTape(tag, warn_user);
+	warn_user=false;
+#endif
+
 	double *adolGrad = new double[fi.nParam()];
 	// set the next input values
 	int nInput=Input.cols();
 	int nOutput=Known.cols();
 	double *newData = new double[nInput+nOutput];
 
-	if (tag==1) {
-	  static int warning_count=0;
-	  size_t counts[1400];
-	  tapestats(tag,counts);
-	  
-	  if ((counts[4] > TBUFSIZE)&&(++warning_count < 3)) {
-	    fprintf(stderr,"tape size is %lu\n",counts[4]);
-	    fprintf(stderr,"WARNING (%d of %d):ADOLC TBUFSIZE is too small.\n",
-		    warning_count,3);
-	    fprintf(stderr, "Change ./.adolcrc increase gradient performance\n");
-	    size_t val;
-	    for(val=TBUFSIZE; val < counts[4]; val += TBUFSIZE)
-	      ;
-	    fprintf(stderr,"suggest:\n\"OBUFSIZE\" \"%lu\"\n\"LBUFSIZE\" \"%lu\"\n\"VBUFSIZE\" \"%lu\"\n\"TBUFSIZE\" \"%lu\"\n",val,val,val,val);
-	    fprintf(stderr,"ADOLC does not let me know if .adolcrc is correctly sized\n");
-	  }
-	}
-      
 	for(int ex=tid; ex < nExamples; ex += nThread) {
 	  int index=0;
 	  for(int i=0; i < nInput; i++, index++) newData[index] = Input(ex,i);
@@ -195,14 +213,6 @@ FCN_ATTRIBUTES
 	    throw "conditional branch in adolc gradient";
 	  }
 	  for(int i=0; i < fi.nParam(); i++) grad[i] += adolGrad[i];
-	  
-	  //#pragma critical
-	  //{
-	  //float check_p[N_PARAM];
-	  //for(int i=0; i < N_PARAM; i++) check_p[i] = param[i];
-	  //double check= fi.CalcOpt(ex, check_p, &Input, &Known)/nExamples; 
-	  //printf("zos_forward %f, func %f\n",err, check);
-	  //}
 	}
 	delete [] adolGrad;
 	delete [] newData;
