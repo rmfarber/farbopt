@@ -35,6 +35,42 @@ private:
   Matrix<REAL_T> Input, Known; 
   REAL_T *param;
   ObjFcn() { }
+
+  bool have_tape;
+  
+#ifdef USE_GRAD
+  void createAdolcTape()
+  {
+    // create tape
+#pragma omp parallel firstprivate(ADOLC_OpenMP_Handler)
+    {
+      uint32_t nExamples = Input.rows();
+#ifdef _OPENMP
+      int nThread=omp_get_num_threads();
+      int tid=omp_get_thread_num();
+#else
+      int nThread=1;
+      int tid=0;
+#endif
+      int tag=tid+1;
+
+      for(int i=0; i < nParam(); i++) param[i]=0;
+      trace_on(tag,1);
+      adouble *ad_param = new adouble[fi.nParam()];
+      for (int i=0; i< fi.nParam(); i++) {
+	ad_param[i] <<= param[i];
+      }
+      
+      adouble ad_partial;
+      ad_partial = ad_partial + fi.ad_fcn(tid, ad_param, &Input, &Known)/nExamples; 
+      
+      double err;
+      ad_partial >>= err;
+      
+      trace_off();
+    }
+  }
+#endif
   
 public:
   int devID, warpSize;
@@ -53,6 +89,7 @@ public:
     param = new REAL_T[fi.nParam()];
     devID = -1;
     d_oFunc = NULL;
+    have_tape=false;
   }
 
   ~ObjFcn()
@@ -193,6 +230,10 @@ __host__
   void gen_grad(double *grad, const double *param)
   {
 #ifdef USE_GRAD
+    if(!have_tape) {
+      createAdolcTape();
+      have_tape=true;
+    }
 
 #pragma omp parallel firstprivate(ADOLC_OpenMP_Handler)
     {
@@ -206,23 +247,7 @@ __host__
 #endif
       int tag=tid+1;
       if(tid < nExamples) {
-	trace_on(tag,1);
-	adouble *ad_param = new adouble[fi.nParam()];
-	for (int i=0; i< fi.nParam(); i++) {
-	  ad_param[i] <<= param[i];
-	}
-	
-	adouble ad_partial;
-	ad_partial = ad_partial + fi.ad_fcn(tid, ad_param, &Input, &Known)/nExamples; 
-	
-	double err;
-	ad_partial >>= err;
-	
-	trace_off();
-	
 	double *adolGrad = new double[fi.nParam()];
-	reverse(tag,1,N_PARAM,0,1.0,adolGrad);
-	
 	// set the next input values
 	int nInput=Input.cols();
 	int nOutput=Known.cols();
@@ -233,28 +258,27 @@ __host__
 	  for(int i=0; i < nInput; i++, index++) newData[index] = Input(ex,i);
 	  for(int i=0; i < nOutput; i++, index++) newData[index] = Known(ex,i);
 	  set_param_vec(tag,nInput+nOutput,newData);
-	  zos_forward(tag,1,N_PARAM,1,param,&err);
-	  reverse(tag,1,N_PARAM,0,1.0,adolGrad);
-	  
+	  if(gradient(tag, N_PARAM, param, adolGrad) < 0) {
+	    fprintf(stderr,"symbolic gradient failure on conditional branch\n");
+	    throw "conditional branch in adolc gradient";
+	  }
 	  for(int i=0; i < fi.nParam(); i++) grad[i] += adolGrad[i];
 	  
 	  //#pragma critical
-	  	  //{
-	    	  //float check_p[N_PARAM];
-	    	  //for(int i=0; i < N_PARAM; i++) check_p[i] = param[i];
-	    	  //double check= fi.CalcOpt(ex, check_p, &Input, &Known)/nExamples; 
-	    	  //printf("zos_forward %f, func %f\n",err, check);
-	  	  //}
+	  //{
+	  //float check_p[N_PARAM];
+	  //for(int i=0; i < N_PARAM; i++) check_p[i] = param[i];
+	  //double check= fi.CalcOpt(ex, check_p, &Input, &Known)/nExamples; 
+	  //printf("zos_forward %f, func %f\n",err, check);
+	  //}
 	}
 	delete [] adolGrad;
-	delete [] ad_param;
 	delete [] newData;
       }
 #pragma omp barrier
     }
 #endif
   }
-  
 
   FCN_ATTRIBUTES
   inline void pred(Matrix<REAL_T> *Output)
