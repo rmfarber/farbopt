@@ -63,14 +63,13 @@ print """
   
   template<bool IS_PRED>
   FCN_ATTRIBUTES
-  inline float generic_fcn(const uint32_t exampleNumber, const REAL_T *p,
-                           const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  inline float generic_fcn(const REAL_T *p, const REAL_T *I, REAL_T *pred)
 """
 print "{"
 print "   float in[%d];" % (nInput)
 
 for i in range(0,nInput):
-    print "   in[%d] = (*I)(exampleNumber,%d);" % (i,i)
+    print "   in[%d] = I[%d];" % (i,i)
 
 for i in range(0,nH1):
    print "   register float h1_%d = p[%d];" % (i,index)
@@ -116,31 +115,87 @@ for i in range(0,nOutput):
     gCalls += 1
 
     print "   if(IS_PRED == true) {"
-    print "      (*pred)(exampleNumber,%d) = o;" %(i)
+    print "      pred[%d] = o;" %(i)
     if((i+1) == nInput):
        print "      return 0.;"
     print "   }"
-    print "   o -= (*pred)(exampleNumber,%d);" % (i)
+    print "   o -= pred[%d];" % (i)
     print "   sum += o*o;"
     flopEstimate += 3
 
 print "   return(sum);"
 print "}"
 print 
+index=0
+print """
+  adouble ad_fcn(const uint32_t exampleNumber, const adouble *p,
+                           const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+"""
+print "{"
+print "   adouble in[%d];" % (nInput)
+print "   adouble known[%d];" % (nOutput)
+
+for i in range(0,nInput):
+    print "   in[%d] = mkparam( (*I)(exampleNumber,%d) );" % (i,i)
+
+for i in range(0,nOutput):
+    print "   known[%d] = mkparam( (*pred)(exampleNumber,%d) );" % (i,i)
+
+for i in range(0,nH1):
+   print "   adouble h1_%d = p[%d];" % (i,index)
+   index += 1
+
+#input to h1
+for i in range(0,nInput):
+    for j in range(0,nH1):
+        print "   h1_%d += in[%d] * p[%d];" % (j,i,index)
+        index += 1
+
+for j in range(0,nH1):
+    print "   h1_%d = G_ad(h1_%d);" % (j,j)
+   
+for i in range(0,nH2):
+   print "   adouble h2_%d = p[%d];" % (i,index)
+   index += 1
+   
+for i in range(0,nH1):
+    for j in range(0,nH2):
+        print "   h2_%d += h1_%d * p[%d];" % (j,i,index)
+        index += 1
+
+for j in range(0,nH2):
+    print "   h2_%d = G_ad(h2_%d);" % (j,j)
+   
+print "   adouble o,sum = 0.f;"
+
+for i in range(0,nOutput):
+    print "   o = p[%d];" % (index)
+    index += 1
+    for j in range(0,nH2):
+        print "   o += h2_%d * p[%d];" % (j,index)
+        index += 1
+
+    # Use a linear output
+    #print "   o = G(o);"
+
+    print "   o -= known[%d];" % (i)
+    print "   sum += o*o;"
+
+print "   return(sum);"
+print "}"
+print 
 print """
   FCN_ATTRIBUTES
-  inline void CalcOutput(const uint32_t exampleNumber, const float *p,
-                         const Matrix<REAL_T> *I, Matrix<REAL_T> *pred)
+  inline void CalcOutput(const float *p, const REAL_T *I, REAL_T *pred)
   {
-    generic_fcn<true>(exampleNumber, p, I, pred);
+    generic_fcn<true>(p, I, pred);
   }
   
+#pragma omp declare simd
   FCN_ATTRIBUTES
-  inline float CalcOpt(const uint32_t exampleNumber, const float *p, 
-                       const Matrix<REAL_T> *I, const Matrix<REAL_T> *Known)
+  inline float CalcOpt(const float *p, const REAL_T *I, const REAL_T *Known)
   {
-    return generic_fcn<false>(exampleNumber, p, I,
-                              const_cast< Matrix<REAL_T> *>(Known));
+    return generic_fcn<false>(p, I, const_cast< REAL_T *>(Known));
   }
 };
 #endif
