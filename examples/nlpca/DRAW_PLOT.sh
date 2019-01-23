@@ -1,3 +1,12 @@
+#!/bin/bash
+. ./common.sh
+
+
+if [ $DIM -ne "2" ];then
+   echo "wrong input vector length. Must be 2";
+   exit -1;
+fi
+
 TYPE=`basename $PWD`
 KNOWN_PNG=$TYPE"_known.png"
 #echo $KNOWN_PNG

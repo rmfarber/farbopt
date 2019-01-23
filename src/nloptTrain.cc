@@ -3,7 +3,7 @@
 
 #include "DataType.hpp"
 
-#include "generatedFunc.hpp"
+#include "FcnOfInterest.hpp"
 #include "ObjFcn.hpp"
 #include <vector>
 #include <nlopt.h>

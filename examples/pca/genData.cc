@@ -20,7 +20,7 @@ void genData(FILE *fn, int nVec, float xVar, int nDim)
   for(int i=0; i < nVec; i++) {
     float t = xRange * f_rand();
     float z1 = t +  xVar * f_rand();
-#ifdef USE_LINEAR
+#ifdef LINEAR_ACTIVATION_FCN
     float z2 = t +  xVar * f_rand();
 #else
     float z2 = t*t*t +  xVar * f_rand();
@@ -57,3 +57,4 @@ int main(int argc, char *argv[])
   if(fn != stdout) fclose(fn);
   return 0;
 }
+

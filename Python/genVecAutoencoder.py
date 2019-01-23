@@ -1,3 +1,4 @@
+#this is deprecated and only kept for future reference
 #!/usr/bin/python
 # Rob Farber
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 . ./common.sh
 ../../Python/genTwoLayer.py -n_i $DIM -n_h1 10 -n_h2 10 -n_o 1  \
-> generatedFunc.hpp
+> FcnOfInterest.hpp
 echo "DIM="$DIM > common.sh
 
 make -j

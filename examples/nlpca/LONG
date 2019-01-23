@@ -1,8 +1,0 @@
-TIME=1200 #seconds
-SIZE=240000000
-NDIM=2
-NPRED=100
-SEED1=1234
-SEED2=123
-./genData.x - $SIZE 0.01 $SEED1 $NDIM | ./nloptTrain.x - param.dat $TIME
-./genData.x - $NPRED 0 $SEED2 $NDIM | ./pred.x - param.dat  > pred.csv

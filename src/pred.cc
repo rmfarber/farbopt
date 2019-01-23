@@ -2,8 +2,7 @@
 using namespace std;
 
 #include "DataType.hpp"
-
-#include "generatedFunc.hpp"
+#include "FcnOfInterest.hpp"
 #include "ObjFcn.hpp"
 #include <algorithm>
 #include <nlopt.h>
