@@ -7,7 +7,11 @@
 #define FCN_ATTRIBUTES ""
 #endif
 
-#define N_INPUT (4)
+// convenience to use DIM from from common.sh
+// edit DEFINE_INPUTSIZE.sh to change
+#include "InputSize.h"
+
+//#define N_INPUT (4)
 #define N_H1 (10)
 #define N_H2 (10)
 #define N_OUTPUT (1)
@@ -42,8 +46,15 @@ struct generatedFcnInterest {
   inline uint32_t nParam() { return N_PARAM; }
   FCN_ATTRIBUTES
   inline uint32_t nFlop() {return FLOP_ESTIMATE;}
+
+  // really hate the following. Fix using preprocessor later.
   FCN_ATTRIBUTES 
-   inline const char* name() {return "twolayer 4x10x10x1 (no I->O) function";}
+  inline const char* name() {
+    static char name[256];
+    sprintf(name,"Twolayer %dx%dx%dx%d",N_INPUT,N_H1,N_H2,N_OUTPUT);
+    return name;
+  }
+
 
   FCN_ATTRIBUTES
   inline const char* gFcnName() {return G_DESC_STRING; }
