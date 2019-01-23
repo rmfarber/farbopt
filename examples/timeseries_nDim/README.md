@@ -6,5 +6,5 @@ sh HOST_GEN_TRAIN
 ./nloptTrain.x --data train.dat --param param.dat -t 10
 
 #predict using trained network, use NRMSD as measure
-./pred.x pred.dat param.dat | ./NRMSE.py
+./pred.x -d pred.dat -p param.dat | ./NRMSE.py
 
