@@ -12,7 +12,7 @@ GENDAT=.
 
 B=0.1
 C=0.2
-M=3
+let M="$DIM - 1"
 DELTA=6
 TAU=17
 NPRED=100
