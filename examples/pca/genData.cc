@@ -20,11 +20,11 @@ void genData(FILE *fn, int nVec, float xVar, int nDim)
   for(int i=0; i < nVec; i++) {
     float t = xRange * f_rand();
     float z1 = t +  xVar * f_rand();
-#ifdef LINEAR_ACTIVATION_FCN
+#warning "generating linear data"
     float z2 = t +  xVar * f_rand();
-#else
-    float z2 = t*t*t +  xVar * f_rand();
-#endif
+//#warning "generating nonlinear data"
+    //float z2 = t*t*t +  xVar * f_rand();
+
     fwrite(&z1, sizeof(float), 1, fn);
     fwrite(&z2, sizeof(float), 1, fn);
     for(int i=2; i < nDim; i++)

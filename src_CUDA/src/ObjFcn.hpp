@@ -4,6 +4,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cassert>
+#include "Matrix.hpp"
 
 #ifdef USE_GRAD
 #include <adolc/adolc.h>
@@ -37,30 +38,36 @@ private:
   Matrix<REAL_T> Input, Known; 
   REAL_T *param;
   ObjFcn() { }
-
   bool have_tape;
   
 #ifdef USE_GRAD
-  void createAdolcTape(int tag)
+  void createAdolcTape(int tag, bool warn)
   {
     uint32_t nExamples = Input.rows();
-
     for(int i=0; i < fi.nParam(); i++) param[i]=0;
+
     trace_on(tag,1);
     adouble *ad_param = new adouble[fi.nParam()];
-    for (int i=0; i< fi.nParam(); i++) {
-      ad_param[i] <<= param[i];
-    }
+    for (int i=0; i< fi.nParam(); i++) ad_param[i] <<= param[i];
+
+    adouble *ad_I = new adouble[fi.nInput()];
+    adouble *ad_K = new adouble[fi.nOutput()];
+    for(int i=0; i< fi.nInput(); i++) ad_I[i] = mkparam(Input(0,i));
+    for(int i=0; i< fi.nOutput(); i++) ad_K[i] = mkparam(Known(0,i));
     
     adouble ad_partial;
-    ad_partial = ad_partial + fi.ad_fcn(0, ad_param, &Input, &Known)/nExamples; 
+    ad_partial = ad_partial + fi.CalcErr(ad_param, ad_I, ad_K)/nExamples; 
     
     double err;
     ad_partial >>= err;
     
     trace_off();
+
+    delete [] ad_param;
+    delete [] ad_I;
+    delete [] ad_K;
     
-    if (tag==1) {
+    if ( warn ) {
       size_t counts[1400];
       tapestats(tag,counts);
       
@@ -91,7 +98,7 @@ private:
       int tid=0;
 #endif
       int tag=tid+1;
-      createAdolcTape(tag);
+      createAdolcTape(tag, (tag==1)?true:false);
 #pragma omp barrier
     }
   }

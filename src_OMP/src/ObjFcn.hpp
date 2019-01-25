@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <cassert>
+#include "Matrix.hpp"
 
 #ifndef FCN_ATTRIBUTES
 #define FCN_ATTRIBUTES
@@ -10,12 +11,13 @@
 
 #ifdef USE_GRAD
 #include <adolc/adolc.h>
+#include <vector>
+using namespace std;
 #ifdef _OPENMP
 #include <omp.h>
 #include <adolc/adolc_openmp.h>
 #endif
 #endif
-
 
 template< typename REAL_T, typename myFcnInterest >
 class ObjFcn {
@@ -30,21 +32,28 @@ private:
   void createAdolcTape(int tag, bool warn)
   {
     uint32_t nExamples = Input.rows();
-
     for(int i=0; i < fi.nParam(); i++) param[i]=0;
+
     trace_on(tag,1);
     adouble *ad_param = new adouble[fi.nParam()];
-    for (int i=0; i< fi.nParam(); i++) {
-      ad_param[i] <<= param[i];
-    }
+    for (int i=0; i< fi.nParam(); i++) ad_param[i] <<= param[i];
+
+    adouble *ad_I = new adouble[fi.nInput()];
+    adouble *ad_K = new adouble[fi.nOutput()];
+    for(int i=0; i< fi.nInput(); i++) ad_I[i] = mkparam(Input(0,i));
+    for(int i=0; i< fi.nOutput(); i++) ad_K[i] = mkparam(Known(0,i));
     
     adouble ad_partial;
-    ad_partial = ad_partial + fi.ad_fcn(0, ad_param, &Input, &Known)/nExamples; 
+    ad_partial = ad_partial + fi.CalcErr(ad_param, ad_I, ad_K)/nExamples; 
     
     double err;
     ad_partial >>= err;
     
     trace_off();
+
+    delete [] ad_param;
+    delete [] ad_I;
+    delete [] ad_K;
     
     if ( warn ) {
       size_t counts[1400];
@@ -139,7 +148,6 @@ FCN_ATTRIBUTES
 
     double err=0.;
 #pragma omp parallel for reduction(+:err)
-#pragma vector aligned
     for(int i=0; i < nExamples; ++i) {
       err += fi.CalcOpt(param, &I[i*N_INPUT], &K[i*nOutput]); 
     }

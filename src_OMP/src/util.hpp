@@ -449,6 +449,7 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
     cout << "Objective Function: " << oFuncVec->vec[0]->name() << endl
 	 << "Function of Interest: " << fi.name()
 	 << " with G() " << fi.gFcnName() << endl;
+    cout << "Number params " << fi.nParam() << endl;
   }
   
   return(oFuncVec);
