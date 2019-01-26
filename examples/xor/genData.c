@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   float out[nTable];
   for(int32_t i=0; i < nDup; i++) {
     for(int j=0; j < nTable; j++) {
-      float r = variance*(random()/(double)RAND_MAX);
+      float r = variance*(rand()/(double)RAND_MAX);
       out[j] = truthTable[j] +  r;
     }
     fwrite(out, sizeof(float), nTable, fn);
