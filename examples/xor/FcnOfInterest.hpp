@@ -4,7 +4,7 @@
 #ifdef USE_GRAD
 #include <adolc/adolc.h>
 #endif
-#include "Gfcn.h"
+#include "Functions_ANN.hpp"
 
 
 #ifndef FCN_ATTRIBUTES
@@ -24,7 +24,7 @@
 #define N_PARAM  ( (N_OUTPUT + N_H1) + (N_INPUT*N_H1) + (N_H1*N_OUTPUT )+ (N_INPUT*N_OUTPUT) ) 
 
 //The final 2 ops are for the sum in the objective function
-#define FLOP_ESTIMATE ( 2*(N_PARAM - N_OUTPUT-N_H1) + N_OUTPUT + 2 + N_H1*GFCN::flops() )
+#define FLOP_ESTIMATE ( 2*(N_PARAM - N_OUTPUT-N_H1) + N_OUTPUT + 2 + N_H1*GFCN::nflop() )
 
 template<typename REAL_T>
 struct generatedFcnInterest {
@@ -52,7 +52,7 @@ struct generatedFcnInterest {
     o = p[1];
     h1 += I[0] * p[2];
     h1 += I[1] * p[3];
-    h1 = GFCN::G(h1);
+    h1 = GFCN::fcn(h1);
     o += I[0] * p[4];
     o += I[1] * p[5];
     o += h1 * p[6];

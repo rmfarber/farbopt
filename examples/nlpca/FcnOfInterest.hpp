@@ -1,7 +1,7 @@
-#ifndef PCA_HPP
-#define PCA_HPP
+#ifndef FCN_OF_INTEREST_HPP
+#define FCN_OF_INTEREST_HPP
 #include <adolc/adolc.h>
-#include "Gfcn.h"
+#include "Functions_ANN.hpp"
 
 #ifndef FCN_ATTRIBUTES
 #define FCN_ATTRIBUTES
@@ -16,28 +16,32 @@
 #define N_H2 (1)
 #define N_H3 (10)
 #define N_OUTPUT (0)
-#define N_PARAM (\
-  + N_H1  \
-  + N_INPUT* N_H1  \
-  + N_H2  \
-  + N_H1* N_H2  \
-  + N_H3  \
-  + N_H2* N_H3  \
-  + N_INPUT + N_INPUT*N_H3 \
-  )
-#define FLOP_ESTIMATE (				\
-		       N_INPUT			\
-		       + N_H1			\
-		       + 2*(N_INPUT * N_H1)	\
-		       + GFCN::flops()*N_H1	\
-		       + N_H2			\
-		       + 2*(N_H1 * N_H2)	\
-		       + N_H3			\
-		       + 2*(N_H2 * N_H3)	\
-		       + GFCN::flops()*N_H3	\
-		       + 1			\
-		       + (N_INPUT * (2*N_H3 + 3) )	\
-						)
+#define N_PARAM (					\
+		 (0					\
+		  + AllLayer_Init<N_H1>::nparam()	\
+		  + All2all<N_H1, N_INPUT>::nparam()	\
+		  + AllLayer_G<N_H1, GFCN>::nparam()	\
+		  + AllLayer_Init<N_H2>::nparam()	\
+		  + All2all<N_H2, N_H1>::nparam()	\
+		  + AllLayer_Init<N_H3>::nparam()	   \
+		  + All2all<N_H3, N_H2>::nparam()	   \
+		  + AllLayer_G<N_H3, GFCN>::nparam()		\
+		  + (N_INPUT*AllLayer2neuron<N_H3>::nparam())	\
+		  )						\
+							)
+#define FLOP_ESTIMATE (						\
+		       (0					\
+			+ AllLayer_Init<N_H1>::nflop()		\
+			+ All2all<N_H1, N_INPUT>::nflop()	\
+			+ AllLayer_G<N_H1, GFCN>::nflop()	\
+			+ AllLayer_Init<N_H2>::nflop()		\
+			+ All2all<N_H2, N_H1>::nflop()		\
+			+ AllLayer_Init<N_H3>::nflop()		\
+			+ All2all<N_H3, N_H2>::nflop()		      \
+			+ AllLayer_G<N_H3, GFCN>::nflop()		\
+			+ 1 + 3*N_INPUT*AllLayer2neuron<N_H3>::nflop()	\
+			)						\
+								)
 template<typename REAL_T>
 struct generatedFcnInterest {
   FCN_ATTRIBUTES
@@ -66,65 +70,38 @@ struct generatedFcnInterest {
   {
     register int index=0;
     
-    // FLOP/s (+ N_H1) 
-    // NPARAM (+ N_H1) 
     T h1[N_H1];
-    for(int i=0; i < N_H1; i++) h1[i] = p[index++];
+    AllLayer_Init<N_H1>::fcn(h1, p, index);
+    index += AllLayer_Init<N_H1>::nparam();
     
-    // FLOP/s (+ 2*(N_INPUT * N_H1))
-    // NPARAM (+ N_INPUT* N_H1) 
-    for(int from=0; from < N_INPUT; from++) {
-      for(int to=0; to < N_H1; to++) {
-	h1[to] += I[from] * p[index++];
-      }
-    } 
-    // FLOP/s (+ GFCN::flops()*N_H1)
-    for(int i=0; i < N_H1; i++) h1[i] = GFCN::G(h1[i]);
+    All2all<N_H1,N_INPUT>::fcn(h1, I, p,index);
+    index += All2all<N_H1, N_INPUT>::nparam();
+
+    AllLayer_G<N_H1, GFCN>::fcn(h1, p, index);
     
-    
-    // FLOP/s (+ N_H2) 
-    // NPARAM (+ N_H2) 
     T h2[N_H2];
-    for(int i=0; i < N_H2; i++) h2[i] = p[index++];
+    AllLayer_Init<N_H2>::fcn(h2, p, index);
+    index += AllLayer_Init<N_H2>::nparam();
     
-    // FLOP/s (+ 2*(N_H1 * N_H2))
-    // NPARAM (+ N_H1* N_H2) 
-    for(int from=0; from < N_H1; from++) {
-      for(int to=0; to < N_H2; to++) {
-	h2[to] += h1[from] * p[index++];
-      }
-    } 
+    All2all<N_H2,N_H1>::fcn(h2, h1, p,index);
+    index += All2all<N_H2, N_H1>::nparam();
     
     T h3[N_H3];
-    // FLOP/s (+ N_H3)
-    // NPARAM (+ N_H3) 
-    for(int i=0; i < N_H3; i++) h3[i] = p[index++];
+    AllLayer_Init<N_H3>::fcn(h3, p, index);
+    index += AllLayer_Init<N_H3>::nparam();
     
-    // FLOP/s (+ 2*(N_H2 * N_H3))
-    // NPARAM (+ N_H2* N_H3) 
-    for(int from=0; from < N_H2; from++) {
-      for(int to=0; to < N_H3; to++) {
-	h3[to] += h2[from] * p[index++];
-      }
-    } 
+    All2all<N_H3,N_H2>::fcn(h3, h2, p,index);
+    index += All2all<N_H3, N_H2>::nparam();
     
-    // FLOP/s (+ GFCN::flops()*N_H3)
-    for(int i=0; i < N_H3; i++) h3[i] = GFCN::G(h3[i]);
+    AllLayer_G<N_H3, GFCN>::fcn(h3, p, index);
     
-    // FLOP/s (+1)
     register T sum = 0.f;
-
-    // FLOP/s (+ (N_INPUT * (2*N_H3 + 3)))
-    // NPARAM (+ N_INPUT + N_INPUT*N_H3) 
     for(int to=0; to < N_INPUT; to++) {
-      register T o = p[index++];
-      for(int from=0; from < N_H3; from++) o += h3[from] * p[index++];
+      register T o = AllLayer2neuron<N_H3>::fcn(h3, p, index);
+      index += AllLayer2neuron<N_H3>::nparam();
       
       if(IS_PRED == true) { pred[to] = o;
-      } else {
-	o -= I[to];
-	sum += o*o;
-      }
+      } else { o -= I[to]; sum += o*o; }
     }
     return(sum);
   }
