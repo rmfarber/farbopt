@@ -2,8 +2,9 @@
 #ARCH_DIR=$(HOME)/new/farbopt/src_CUDA
 
 ARCH_DIR=..
-CXXFLAGS = -O3 -D GFCN=Elliott_nn
-#CXXFLAGS = -O3 -D GFCN=Tanh_nn
-#CXXFLAGS = -O3 -D GFCN=Logistic_nn
-#CXXFLAGS = -O3 -D GFCN=Elu_nn 
-#CXXFLAGS = -O3 -D GFCN=Linear_nn
+
+CXXFLAGS = -O3 -D GFCN=Elliott_G
+#CXXFLAGS = -O3 -D GFCN=Tanh_G
+#CXXFLAGS = -O3 -D GFCN=Logistic_G
+#CXXFLAGS = -O3 -D GFCN=Elu_G 
+#CXXFLAGS = -O3 -D GFCN=Linear_G
