@@ -4,14 +4,16 @@ import sys, fileinput, re
 from math import sqrt
 
 #skip header info
-for i in range(0,8):
-    sys.stdin.readline()
+#for i in range(0,9):
+#    sys.stdin.readline()
 
 lines=0
 total=0.
 min_p=0.
 max_p=0.
 for line in fileinput.input():
+	if(line.find('pred,')<0):
+	   continue
         lines += 1
         x=line.split(', ')
         pred = float(x[1])
