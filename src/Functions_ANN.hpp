@@ -111,26 +111,26 @@ template<int LEN_LAYER> class AllLayer2neuron {
   } 
 };
 
-template<int LEN_TO_LAYER, int LEN_FROM_LAYER> class All2all {
+template<int LEN_FROM_LAYER, int LEN_TO_LAYER> class FromAll2all {
  public:
   FCN_ATTRIBUTES
-    inline static const char *name()  { return "All2all"; }
+    inline static const char *name()  { return "FromAll2all"; }
   FCN_ATTRIBUTES
     inline static int nparam() { return(LEN_TO_LAYER*LEN_FROM_LAYER);} 
   FCN_ATTRIBUTES
     inline static int nflop() { return(2*LEN_TO_LAYER*LEN_FROM_LAYER);} 
   FCN_ATTRIBUTES
-    inline static void fcn(float *to_layer, const float *from_layer,
+    inline static void fcn(const float *from_layer, float *to_layer,
 			   const float *param, int index) {
-    for(int to=0; to < LEN_TO_LAYER; ++to)
-      for(int from=0; from < LEN_FROM_LAYER; ++from)
+    for(int from=0; from < LEN_FROM_LAYER; ++from)
+      for(int to=0; to < LEN_TO_LAYER; ++to)
 	to_layer[to] += param[index++] * from_layer[from];
   } 
   FCN_ATTRIBUTES
-    inline static void fcn(adouble *to_layer, const adouble *from_layer,
+    inline static void fcn(const adouble *from_layer, adouble *to_layer,
 			   const adouble *param, int index) {
-    for(int to=0; to < LEN_TO_LAYER; ++to)
-      for(int from=0; from < LEN_FROM_LAYER; ++from)
+    for(int from=0; from < LEN_FROM_LAYER; ++from)
+      for(int to=0; to < LEN_TO_LAYER; ++to)
 	to_layer[to] += param[index++] * from_layer[from];
   } 
 };

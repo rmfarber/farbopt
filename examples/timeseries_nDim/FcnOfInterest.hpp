@@ -1,38 +1,42 @@
 #ifndef FCN_OF_INTEREST_HPP
 #define FCN_OF_INTEREST_HPP
-#include "Gfcn.h"
+#include <adolc/adolc.h>
+#include "Functions_ANN.hpp"
 
 #ifndef FCN_ATTRIBUTES
-#define FCN_ATTRIBUTES ""
+#define FCN_ATTRIBUTES
 #endif
 
 // convenience to use DIM from from common.sh
 // edit DEFINE_INPUTSIZE.sh to change
 #include "InputSize.h"
 
-//#define N_INPUT (4)
+//#define N_INPUT 16
 #define N_H1 (10)
 #define N_H2 (10)
 #define N_OUTPUT (1)
-#define N_PARAM (				\
-		 N_H1				\
-		 + N_INPUT* N_H1		\
-		 + N_H2				\
-		 + N_H1* N_H2			\
-		 + N_OUTPUT + N_OUTPUT*N_H2		\
-						)
-
-#define FLOP_ESTIMATE (				\
-		       N_INPUT			\
-		       + N_H1			\
-		       + 2*(N_INPUT * N_H1)	\
-		       + GFCN::flops()*N_H1	\
-		       + N_H2			\
-		       + 2*(N_H1 * N_H2)	\
-		       + GFCN::flops()*N_H2	\
-		       +1			\
-		       + N_OUTPUT * (2*N_H2 + 3)	\
-						)
+#define N_PARAM (					\
+		 (0					\
+		  + AllLayer_Init<N_H1>::nparam()	\
+		  + FromAll2all<N_INPUT, N_H1>::nparam()	\
+		  + AllLayer_G<N_H1, GFCN>::nparam()	\
+		  + AllLayer_Init<N_H2>::nparam()	\
+		  + FromAll2all<N_H1, N_H2>::nparam()	\
+		  + AllLayer_G<N_H2, GFCN>::nparam()		\
+		  + (N_OUTPUT*AllLayer2neuron<N_H2>::nparam())	\
+		  )						\
+							)
+#define FLOP_ESTIMATE (						\
+		       (0					\
+			+ AllLayer_Init<N_H1>::nflop()		\
+			+ FromAll2all<N_INPUT, N_H1>::nflop()	\
+			+ AllLayer_G<N_H1, GFCN>::nflop()	\
+			+ AllLayer_Init<N_H2>::nflop()		\
+			+ FromAll2all<N_H1, N_H2>::nflop()		\
+			+ AllLayer_G<N_H2, GFCN>::nflop()		\
+			+ 1 + 3*N_OUTPUT*AllLayer2neuron<N_H2>::nflop()	\
+			)						\
+								)
 template<typename REAL_T>
 struct generatedFcnInterest {
   FCN_ATTRIBUTES
@@ -43,71 +47,49 @@ struct generatedFcnInterest {
   inline uint32_t nParam() { return N_PARAM; }
   FCN_ATTRIBUTES
   inline uint32_t nFlop() {return FLOP_ESTIMATE;}
-
-  // really hate the following. Fix using preprocessor later.
   FCN_ATTRIBUTES 
+  // really hate the following. Fix using preprocessor later.
   inline const char* name() {
     static char name[256];
-    sprintf(name,"Twolayer %dx%dx%dx%d",N_INPUT,N_H1,N_H2,N_OUTPUT);
+    sprintf(name,"twolayer %dx%dx%dx%d",N_INPUT,N_H1,N_H2,N_OUTPUT);
     return name;
   }
-
+  
   FCN_ATTRIBUTES
   inline const char* gFcnName() {return GFCN::name(); }
   
-  template< bool IS_PRED,typename T=REAL_T >
+  template<bool IS_PRED, typename T=REAL_T>
   FCN_ATTRIBUTES
   inline T generic_fcn(const T *p, const T *I, T *pred)
     
   {
     register int index=0;
     
-    
-    // FLOP/s (+ N_H1) 
-    // NPARAM (+ N_H1) 
     T h1[N_H1];
-    for(int i=0; i < N_H1; i++) h1[i] = p[index++];
+    AllLayer_Init<N_H1>::fcn(h1, p, index);
+    index += AllLayer_Init<N_H1>::nparam();
     
-    // FLOP/s (+ 2*(N_INPUT * N_H1))
-    // NPARAM (+ N_INPUT* N_H1) 
-    for(int from=0; from < N_INPUT; from++) {
-      for(int to=0; to < N_H1; to++) {
-	h1[to] += I[from] * p[index++];
-      }
-    } 
-    // FLOP/s (+ GFCN::flops()*N_H1)
-    for(int i=0; i < N_H1; i++) h1[i] = GFCN::G(h1[i]);
+    FromAll2all<N_INPUT,N_H1>::fcn(I, h1, p,index);
+    index += FromAll2all<N_INPUT, N_H1>::nparam();
+
+    AllLayer_G<N_H1, GFCN>::fcn(h1, p, index);
     
     T h2[N_H2];
+    AllLayer_Init<N_H2>::fcn(h2, p, index);
+    index += AllLayer_Init<N_H2>::nparam();
     
-    // FLOP/s (+ N_H2) 
-    // NPARAM (+ N_H2) 
-    for(int i=0; i < N_H2; i++) h2[i] = p[index++];
+    FromAll2all<N_H1,N_H2>::fcn(h1, h2, p,index);
+    index += FromAll2all<N_H1, N_H2>::nparam();
     
-    // FLOP/s (+ 2*(N_H1 * N_H2))
-    // NPARAM (+ N_H1* N_H2) 
-    for(int from=0; from < N_H1; from++) {
-      for(int to=0; to < N_H2; to++) {
-	h2[to] += h1[from] * p[index++];
-      }
-    } 
-    // FLOP/s (+ GFCN::flops()*N_H2)
-    for(int i=0; i < N_H2; i++) h2[i] = GFCN::G(h2[i]);
+    AllLayer_G<N_H2, GFCN>::fcn(h2, p, index);
     
-    // FLOP/s (+1)
     register T sum = 0.f;
-    
-    // FLOP/s (+ (N_OUTPUT * (2*N_H2 + 3)))
-    // NPARAM (+ N_OUTPUT + N_OUTPUT*N_H2) 
     for(int to=0; to < N_OUTPUT; to++) {
-      register T o = p[index++];
-      for(int from=0; from < N_H2; from++) o += h2[from] * p[index++];
+      register T o = AllLayer2neuron<N_H2>::fcn(h2, p, index);
+      index += AllLayer2neuron<N_H2>::nparam();
       
       if(IS_PRED == true) { pred[to] = o;
-      } else {
-	o -= pred[to];
-	sum += o*o;
-      }
+      } else { o -= pred[to]; sum += o*o; }
     }
     return(sum);
   }
@@ -132,5 +114,4 @@ struct generatedFcnInterest {
   }
 };
 #endif
-
 

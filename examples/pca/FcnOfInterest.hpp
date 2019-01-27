@@ -19,12 +19,12 @@
 #define N_PARAM (					\
 		 (0					\
 		  + AllLayer_Init<N_H1>::nparam()	\
-		  + All2all<N_H1, N_INPUT>::nparam()	\
+		  + FromAll2all<N_INPUT, N_H1>::nparam()	\
 		  + AllLayer_G<N_H1, GFCN>::nparam()	\
 		  + AllLayer_Init<N_H2>::nparam()	\
-		  + All2all<N_H2, N_H1>::nparam()	\
+		  + FromAll2all<N_H1, N_H2>::nparam()	\
 		  + AllLayer_Init<N_H3>::nparam()	   \
-		  + All2all<N_H3, N_H2>::nparam()	   \
+		  + FromAll2all<N_H2, N_H3>::nparam()	   \
 		  + AllLayer_G<N_H3, GFCN>::nparam()		\
 		  + (N_INPUT*AllLayer2neuron<N_H3>::nparam())	\
 		  )						\
@@ -32,12 +32,12 @@
 #define FLOP_ESTIMATE (						\
 		       (0					\
 			+ AllLayer_Init<N_H1>::nflop()		\
-			+ All2all<N_H1, N_INPUT>::nflop()	\
+			+ FromAll2all<N_INPUT, N_H1>::nflop()	\
 			+ AllLayer_G<N_H1, GFCN>::nflop()	\
 			+ AllLayer_Init<N_H2>::nflop()		\
-			+ All2all<N_H2, N_H1>::nflop()		\
+			+ FromAll2all<N_H1, N_H2>::nflop()		\
 			+ AllLayer_Init<N_H3>::nflop()		\
-			+ All2all<N_H3, N_H2>::nflop()		      \
+			+ FromAll2all<N_H2, N_H3>::nflop()		      \
 			+ AllLayer_G<N_H3, GFCN>::nflop()		\
 			+ 1 + 3*N_INPUT*AllLayer2neuron<N_H3>::nflop()	\
 			)						\
@@ -74,8 +74,8 @@ struct generatedFcnInterest {
     AllLayer_Init<N_H1>::fcn(h1, p, index);
     index += AllLayer_Init<N_H1>::nparam();
     
-    All2all<N_H1,N_INPUT>::fcn(h1, I, p,index);
-    index += All2all<N_H1, N_INPUT>::nparam();
+    FromAll2all<N_INPUT,N_H1>::fcn(I, h1, p,index);
+    index += FromAll2all<N_INPUT, N_H1>::nparam();
 
     AllLayer_G<N_H1, GFCN>::fcn(h1, p, index);
     
@@ -83,15 +83,15 @@ struct generatedFcnInterest {
     AllLayer_Init<N_H2>::fcn(h2, p, index);
     index += AllLayer_Init<N_H2>::nparam();
     
-    All2all<N_H2,N_H1>::fcn(h2, h1, p,index);
-    index += All2all<N_H2, N_H1>::nparam();
+    FromAll2all<N_H1,N_H2>::fcn(h1, h2, p,index);
+    index += FromAll2all<N_H1, N_H2>::nparam();
     
     T h3[N_H3];
     AllLayer_Init<N_H3>::fcn(h3, p, index);
     index += AllLayer_Init<N_H3>::nparam();
     
-    All2all<N_H3,N_H2>::fcn(h3, h2, p,index);
-    index += All2all<N_H3, N_H2>::nparam();
+    FromAll2all<N_H2,N_H3>::fcn(h2, h3, p,index);
+    index += FromAll2all<N_H2, N_H3>::nparam();
     
     AllLayer_G<N_H3, GFCN>::fcn(h3, p, index);
     
