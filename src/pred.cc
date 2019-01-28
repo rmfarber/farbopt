@@ -7,6 +7,7 @@ using namespace std;
 
 #ifndef PREDFCN
 #define PREDFCN generic_fcn
+#define STANDARD_HAVE_KNOWNS
 #endif
 
 class PredFcn {
@@ -154,13 +155,21 @@ int main(int argc, char* argv[])
 	cout << "pred";
 	for(int j=0; j < nInput; j++) cout << ", " << O[j];
 	cout << ", known"; 
+#ifdef STANDARD_HAVE_KNOWNS
 	for(int j=0; j < nInput; j++) cout << ", " << I[j];
+#else
+	for(int j=0; j < nInput; j++) cout << ", " << 0.;
+#endif
 	cout << endl;
       } else {
 	cout << "pred"; 
 	for(int j=0; j < nOutput; j++) cout << ", " << O[j];
 	cout << ", known"; 
+#ifdef STANDARD_HAVE_KNOWNS
 	for(int j=0; j < nOutput; j++) cout << ", " << Known[j];
+#else
+	for(int j=0; j < nOutput; j++) cout << ", " << 0.;
+#endif
 	cout << endl;
       }
     }
