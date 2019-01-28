@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     // Now read the input stream/file.
     int nInput, nOutput;
     int ret;
-    FILE *fn;
+    FILE *fn=stdin;
     
     if(datafile != "-")
       fn=fopen(datafile.c_str(),"r");
