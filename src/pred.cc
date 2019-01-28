@@ -1,15 +1,46 @@
 #include <iostream>
 using namespace std;
 
-#include "DataType.hpp"
 #include "FcnOfInterest.hpp"
-#include "ObjFcn.hpp"
 #include <algorithm>
-#include <nlopt.h>
-#include "util.hpp"
 #include <getopt.h>
 
-extern double getTime();
+#ifndef PREDFCN
+#define PREDFCN generic_fcn
+#endif
+
+class PredFcn {
+private:
+  vector<float> param;
+  PredFcn();
+public:
+  generatedFcnInterest<float> fi;
+  PredFcn(const char * paramFile) { loadParam(paramFile); }
+  PredFcn(const string &paramFile) { loadParam(paramFile.c_str()); }
+  void loadParam(const char * filename)
+  {
+    FILE *fn=fopen(filename,"r");
+    if(!fn) throw runtime_error("Cannot open file");
+
+    int parmInFile;
+    int ret;
+    
+    ret=fread(&parmInFile,sizeof(uint32_t), 1, fn);
+    if(ret != 1) throw runtime_error("header read failure in parameter file");
+    
+    if(parmInFile != fi.nParam()) {
+      if(ret != fi.nParam()) throw runtime_error("Incorrect number of parameters in file");
+    }
+    param.reserve(fi.nParam());
+    ret=fread(&param[0],sizeof(float), fi.nParam(), fn);
+    if(ret != fi.nParam()) throw runtime_error("parameter read failed");
+  }
+
+  void predict(const float *input, float * output)
+  {
+    fi.PREDFCN<true,float>(&param[0],input,output);
+  }
+};
 
 void PrintHelp(char *PgmName)
 {
@@ -56,7 +87,6 @@ int ProcessArgs(int argc, char *argv[])
 
 int main(int argc, char* argv[])
 {
-
   if(ProcessArgs(argc,argv) <0)
     return -1;
 
@@ -64,48 +94,84 @@ int main(int argc, char* argv[])
     cout << "Fatal: must specify a training set" << endl;
     return -1;
   }
-  cout << "training data in: " << datafile << endl;
+  cerr << "predict data in: " << datafile << endl;
   if(paramfile.empty()) {
     cout << "Fatal: must specify a parameter file " << endl;
     return -1;
   }
-  // load the data and parameters
-  ObjFuncVec<DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > *oFuncVec =
-    init< DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > (datafile.c_str(), paramfile.c_str(),true);
 
-  ObjFcn<DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > *oFunc= oFuncVec->vec[0];
-  assert(oFunc->devID < 0);
-
-  //cout << "Objective Function: " << oFunc->name() << endl
-       //<< "Function of Interest: " << oFunc->FcnInterest_name()
-       //<< " with G() " << oFunc->FcnInterest_gFcnName() << endl;
-
-  oFunc->offloadParam(oFuncVec->param);
-
-  uint32_t nExamples = oFunc->InputExample().rows();
-  uint32_t nOutput = oFunc->KnownExample().cols();
-  uint32_t nInput = oFunc->InputExample().cols();
-  if(nOutput == 0) // have autoencoder
-    nOutput = oFunc->InputExample().cols();
-  Matrix<DATA_TYPE> Pred(nExamples, nOutput);
-  oFunc->pred(&Pred);
-
-  // output in CSV format
-  for(int i=0; i < nExamples; i++) {
-    if(oFunc->KnownExample().cols() == 0) { // autoencoder special case
-      std::cout << "pred";
-      for(int j=0; j < nInput; j++) std::cout << ", " << Pred(i,j);
-      std::cout << ", known"; 
-      for(int j=0; j < nInput; j++) std::cout << ", " << oFunc->InputExample(i,j);
-      std::cout << endl;
-    } else {
-      std::cout << "pred"; 
-      for(int j=0; j < nOutput; j++) std::cout << ", " << Pred(i,j);
-      std::cout << ", known"; 
-      for(int j=0; j < nOutput; j++) std::cout << ", " << oFunc->KnownExample(i,j);
-      std::cout << endl;
+  try {
+    PredFcn ann(paramfile);
+    
+    // Now read the input stream/file.
+    int nInput, nOutput;
+    int ret;
+    FILE *fn;
+    
+    if(datafile != "-")
+      fn=fopen(datafile.c_str(),"r");
+    
+    if(!fn) {
+      cerr << "Cannot open %s " << datafile << endl;
+      exit(1);
     }
-  }
+    
+    ret=fread(&nInput,sizeof(int), 1, fn);
+    if(ret != 1) throw runtime_error("datafile read failed");
+    if(nInput != ann.fi.nInput())
+      throw runtime_error("Incorrect number of inputs");
+    
+    // we accept pure predict streams with nOutput of zero in the datafile header
+    ret=fread(&nOutput,sizeof(int), 1, fn);
+    if(ret != 1) throw runtime_error("datafile read failed");
+    if( (nOutput > 0) && (nOutput != ann.fi.nOutput()) )
+      throw runtime_error("Incorrect number of Outputs");
 
+    // Ignore the nExamples header.
+    int tmp;
+    ret=fread(&tmp,sizeof(int), 1, fn);
+    if(ret != 1) throw runtime_error("datafile read failed");
+    
+    vector<float> I, Known,O;
+    I.reserve(nInput);
+    O.reserve(nInput);
+    Known.reserve(nOutput);
+    if(nOutput == 0)
+      O.reserve(nInput);
+    else
+      O.reserve(nOutput);
+
+    for(;;) {
+      ret=fread(&I[0],sizeof(float), nInput, fn);
+      if(ret != nInput) break;
+      if(nOutput > 0) {
+	ret=fread(&Known[0],sizeof(float), nOutput, fn);
+	if(ret != nOutput) break;
+      }
+      ann.predict(&I[0],&O[0]);
+
+      // output in CSV format
+      if(nOutput == 0) { // autoencoder special case
+	cout << "pred";
+	for(int j=0; j < nInput; j++) cout << ", " << O[j];
+	cout << ", known"; 
+	for(int j=0; j < nInput; j++) cout << ", " << Known[j];
+	cout << endl;
+      } else {
+	cout << "pred"; 
+	for(int j=0; j < nOutput; j++) cout << ", " << O[j];
+	cout << ", known"; 
+	for(int j=0; j < nOutput; j++) cout << ", " << Known[j];
+	cout << endl;
+      }
+    }
+  } catch(const runtime_error &e) {
+    cout << "Exception found " << e.what() << endl;
+  }
+  
+  
+  
   return 0;
 }
+
+
