@@ -136,10 +136,9 @@ int main(int argc, char* argv[])
     I.reserve(nInput);
     O.reserve(nInput);
     Known.reserve(nOutput);
-    if(nOutput == 0)
-      O.reserve(nInput);
-    else
-      O.reserve(nOutput);
+
+    if(nOutput == 0) O.reserve(nInput);
+    else O.reserve(nOutput);
 
     for(;;) {
       ret=fread(&I[0],sizeof(float), nInput, fn);
@@ -155,7 +154,7 @@ int main(int argc, char* argv[])
 	cout << "pred";
 	for(int j=0; j < nInput; j++) cout << ", " << O[j];
 	cout << ", known"; 
-	for(int j=0; j < nInput; j++) cout << ", " << Known[j];
+	for(int j=0; j < nInput; j++) cout << ", " << I[j];
 	cout << endl;
       } else {
 	cout << "pred"; 
