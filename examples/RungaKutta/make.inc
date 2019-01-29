@@ -1,0 +1,14 @@
+#change ARCH_DIR to build outside of the source tree
+#ARCH_DIR=$(HOME)/new/farbopt/src_CUDA
+
+ARCH_DIR=..
+
+#CXXFLAGS = -O3 -D GFCN=Elliott_G
+#CXXFLAGS = -g -D GFCN=Tanh_G -DRK4_H=0.1 -D PREDFCN=rhs
+CXXFLAGS = -O3 -D GFCN=Tanh_G -DRK4_H=0.1 -D EXPLICIT_RK4
+#CXXFLAGS = -O3 -D GFCN=Tanh_G -DRK4_H=0.1 
+#CXXFLAGS = -O3 -D GFCN=Tanh_G -DRK4_H=0.1 -D RK4_RECURRENCE_LOOPS=1 -D IMPLICIT_RK4
+#CXXFLAGS = -O3 -D GFCN=Tanh_G 
+#CXXFLAGS = -O3 -D GFCN=Logistic_G
+#CXXFLAGS = -O3 -D GFCN=Elu_G 
+#CXXFLAGS = -O3 -D GFCN=Linear_G
