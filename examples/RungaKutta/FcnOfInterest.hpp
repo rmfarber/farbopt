@@ -39,7 +39,7 @@
 #define RK4_H 0.1
 #endif
 #ifndef RK4_RECURRENCE_LOOPS
-#define RK4_RECURRENCE_LOOPS 1
+#define RK4_RECURRENCE_LOOPS 5
 #endif
 
 template<typename REAL_T>
