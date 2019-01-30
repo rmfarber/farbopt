@@ -27,10 +27,10 @@ def predicted_rhs(x,t):
 # 2D Fourth-Order Runge-Kutta Integrator
 def RKTwoD(x, f, t):
     x = np.array(x)
-    k1 = 0.1 * f(x,t)
-    k2 = 0.1 * f(x + x / 2.0,t)
-    k3 = 0.1 * f(x + k2 / 2.0,t)
-    k4 = 0.1 * f(x + k3,t)
+    k1 = 0.1 * np.array(f(x,t))
+    k2 = 0.1 * np.array(f(x + x / 2.0,t))
+    k3 = 0.1 * np.array(f(x + k2/2.0 ,t))
+    k4 = 0.1 * np.array(f(x + k3,t))
     x = x + ( k1 + 2.0 * k2 + 2.0 * k3 + k4 ) / 6.0
     return x
 
@@ -56,7 +56,7 @@ xs[0]=[0.2,0.2]
 RHS=PyPredFcn(b'param.dat')
 for i in range(0,nSamples):
   # at each time step calculate new x(t) and y(t)
-  xs[i+1]=(RKTwoD(xs[i],predicted_rhs,dt))
+  xs[i+1]=RKTwoD(xs[i],predicted_rhs,dt)
   t.append(t[i] + dt)
     
 #for i in range(0,nSamples):
