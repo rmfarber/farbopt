@@ -14,8 +14,8 @@ CXXFLAGS += -use_fast_math
 LDFLAGS = -Xcompiler="-fopenmp" 
 LDFLAGS += -arch=sm_52
 
-INCLUDES= -I $(ARCH_DIR)/../lib/adolc_gcc/include -I $(ARCH_DIR)/../lib/nlopt_nvcc/include -I . -I $(ARCH_DIR)/src -I $(ARCH_DIR)/../src -I /usr/local/cuda/include 
-LD_LIBRARIES= -L $(ARCH_DIR)/../lib/nlopt_nvcc/lib -L /usr/local/cuda/lib64 -L $(ARCH_DIR)/../lib/adolc_gcc/lib64 -lnlopt -lcuda -ladolc
+INCLUDES= -I $(ARCH_DIR)/../lib/adolc_gcc/include -I $(ARCH_DIR)/../lib/nlopt_gcc/include -I . -I $(ARCH_DIR)/src -I $(ARCH_DIR)/../src -I /usr/local/cuda/include 
+LD_LIBRARIES= -L $(ARCH_DIR)/../lib/nlopt_gcc/lib -L /usr/local/cuda/lib64 -L $(ARCH_DIR)/../lib/adolc_gcc/lib64 -lnlopt -lcuda -ladolc
 
 # Correct and uncomment to build MPI training code
 #MPI_INCLUDES += -I/opt/intel/compilers_and_libraries_2016.4.258/linux/mpi/intel64/include
