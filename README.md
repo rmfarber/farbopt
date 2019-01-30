@@ -5,7 +5,8 @@ A TF/s to PF/s numerical optimization and machine-learning framework as discusse
 
 This is a development version 
 
-To build, cd to the nlopt and adolc directories and run the build shell script for your compiler. 
+To build the necessary libs (e.g. nlopt and adolc) run the following script.
+run sh BUILD_LIBS.sh
 
 After that, cd to either src_CUDA or src_OMP and copy the example(s) you want to the directory.
 
