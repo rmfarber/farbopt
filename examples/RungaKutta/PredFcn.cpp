@@ -4,7 +4,7 @@ Example from
 http://docs.cython.org/src/userguide/wrapping_CPlusPlus.html
 */
 
-#include "common.h"
+#include "FcnOfInterest_config.h"
 #include "PredFcn.h"
 
 #ifndef PREDFCN

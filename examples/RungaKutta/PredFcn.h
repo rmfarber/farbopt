@@ -9,7 +9,7 @@ Adapted to include passing of multidimensional arrays
 
 #include <vector>
 #include <iostream>
-#include "common.h"
+#include "FcnOfInterest_config.h"
 #include "FcnOfInterest.hpp"
 
 namespace farbopt {
