@@ -1,6 +1,7 @@
 # distutils: language = c++
 # distutils: sources = PredFcn.cpp
 # distutils: include_dirs = ../../lib/adolc_gcc/include ../../src
+# distutils: depends = FcnOfInterest.hpp FcnOfInterest_config.h
 
 # Cython interface file for wrapping the object
 #
