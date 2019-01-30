@@ -7,9 +7,7 @@
 #define FCN_ATTRIBUTES
 #endif
 
-// convenience to use DIM from from common.sh
-// edit DEFINE_INPUTSIZE.sh to change
-//#include "InputSize.h"
+#include "FcnOfInterest_config.h"
 
 #define N_INPUT 2
 #define N_H1 (5)
@@ -154,11 +152,11 @@ struct generatedFcnInterest {
     T t1[2],t2[2],Yn_1[2];
     
     rhs<IS_PRED, T>(p, I, Yn_1);
+    rhs<IS_PRED, T>(p, I, t1); // this never changes!
     for(int i=0; i < RK4_RECURRENCE_LOOPS; i++) {
-      rhs<IS_PRED, T>(p, I, t1); // this never changes!
+      Yn_1[1] += h; // advance to the Yn_1 state
       rhs<IS_PRED, T>(p, Yn_1, t2);
-      for(int i=0; i < 2; ++i)
-	Yn_1[i] = I[i] + h*0.5*( t1[i] + t2[i] );
+      for(int i=0; i < 2; ++i) Yn_1[i] = I[i] + h*0.5*( t1[i] + t2[i] );
     }
 
     T err = 0.;
