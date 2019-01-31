@@ -154,7 +154,7 @@ struct generatedFcnInterest {
     rhs<IS_PRED, T>(p, I, Yn_1);
     rhs<IS_PRED, T>(p, I, t1); // this never changes!
     for(int i=0; i < RK4_RECURRENCE_LOOPS; i++) {
-      Yn_1[1] += h; // advance to the Yn_1 state
+      //Yn_1[1] += h; // advance to the Yn_1 state
       rhs<IS_PRED, T>(p, Yn_1, t2);
       for(int i=0; i < 2; ++i) Yn_1[i] = I[i] + h*0.5*( t1[i] + t2[i] );
     }
