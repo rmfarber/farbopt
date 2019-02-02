@@ -35,7 +35,7 @@ mpiNloptTrain.x: mpiNloptTrain.o
 	$(CXX) $(LDFLAGS) $< -o $@ $(MPI_LD_LIBRARIES) $(LD_LIBRARIES)
 
 clean:
-	$(RM) *.x *.dat *.d *.o MPI.o* *.png *.txt *.optrpt *.so
+	$(RM) -fr *.x *.dat *.d *.o MPI.o* *.png *.txt *.optrpt *.so build
 allclean:
 	$(RM) *~ *.csv
 	-make clean

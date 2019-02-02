@@ -34,8 +34,7 @@ inline int getMPI_tasks() {
 inline double getTime() { return(omp_get_wtime());}
 
 
-__global__ void launchObjKernel( ObjFcn<float,
-				 generatedFcnInterest<float> >* obj)
+__global__ void launchObjKernel( ObjFcn<float, FcnOfInterest<float> >* obj)
 {
   obj->cuda_func();
 }
@@ -244,8 +243,8 @@ public:
 extern "C" double nloptFunc(unsigned int n, const double *x,
 			    double *grad, void* f_data)
 {
-  ObjFuncVec<float, generatedFcnInterest<float> >
-    *oFuncVec = (ObjFuncVec<float, generatedFcnInterest<float> > *) f_data;
+  ObjFuncVec<float, FcnOfInterest<float> >
+    *oFuncVec = (ObjFuncVec<float, FcnOfInterest<float> > *) f_data;
 
   assert(n == oFuncVec->nParam);
   
@@ -270,7 +269,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   double err=0.;
   bool runOnHostToo=false;
   for(int i=0; i < oFuncVec->vec.size(); i++) {
-    ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
+    ObjFcn<float, FcnOfInterest<float> > *oFunc = oFuncVec->vec[i];
     if(oFunc->devID < 0) {
       runOnHostToo=true;
       continue; 
@@ -291,7 +290,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   if(runOnHostToo) {
 #pragma omp parallel for reduction(+:err) 
     for(int i=0; i < oFuncVec->vec.size(); i++) {
-      ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
+      ObjFcn<float, FcnOfInterest<float> > *oFunc = oFuncVec->vec[i];
       if(oFunc->devID >= 0) continue; 
       
       err += oFunc->func();
@@ -300,7 +299,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   
   // zero the partial error on the device
   for(int i=0; i < oFuncVec->vec.size(); i++) {
-    ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
+    ObjFcn<float, FcnOfInterest<float> > *oFunc = oFuncVec->vec[i];
     if(oFunc->devID < 0) continue; 
 
     cudaSetDevice(oFunc->devID);
@@ -340,7 +339,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
     for(int i=0; i < oFuncVec->nParam; i++) grad[i]=0;
     
     for(int i=0; i < oFuncVec->grad_data.size(); i++) {
-      ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->grad_data[i];
+      ObjFcn<float, FcnOfInterest<float> > *oFunc = oFuncVec->grad_data[i];
       oFunc->gen_grad(grad,x);
     }
     oFuncVec->timeGrad += getTime() - startTime;

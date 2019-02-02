@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
   }
   cout << "using and/or writing params to: " << paramfile << endl;
   
-  ObjFuncVec<DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > *oFuncVec =
-    init< DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> > (datafile.c_str(), paramfile.c_str(),false);
+  ObjFuncVec<DATA_TYPE, struct FcnOfInterest<DATA_TYPE> > *oFuncVec =
+    init< DATA_TYPE, struct FcnOfInterest<DATA_TYPE> > (datafile.c_str(), paramfile.c_str(),false);
 
   cout << "Max Runtime is " << maxRuntime << " seconds" << endl;
 
@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
   
   for(int i=0; i < nParam; i++) x[i] = oFuncVec->param[i];
 
-  fini< DATA_TYPE, struct generatedFcnInterest<DATA_TYPE> >(paramfile.c_str(), oFuncVec);
+  fini< DATA_TYPE, struct FcnOfInterest<DATA_TYPE> >(paramfile.c_str(), oFuncVec);
   nlopt_destroy(opt);
 
   return 0;

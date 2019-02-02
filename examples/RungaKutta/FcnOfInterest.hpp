@@ -43,7 +43,7 @@
 #endif
 
 template<typename REAL_T>
-struct generatedFcnInterest {
+struct FcnOfInterest {
   FCN_ATTRIBUTES
   inline uint32_t nInput() {return N_INPUT;}
   FCN_ATTRIBUTES

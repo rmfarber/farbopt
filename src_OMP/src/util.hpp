@@ -121,8 +121,8 @@ public:
 extern "C" double nloptFunc(unsigned int n, const double *x,
 			    double *grad, void* f_data)
 {
-  ObjFuncVec<float, generatedFcnInterest<float> >
-    *oFuncVec = (ObjFuncVec<float, generatedFcnInterest<float> > *) f_data;
+  ObjFuncVec<float, FcnOfInterest<float> >
+    *oFuncVec = (ObjFuncVec<float, FcnOfInterest<float> > *) f_data;
   
   assert(n == oFuncVec->nParam);
 
@@ -148,7 +148,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
   double err=0.;
   // nested parallelism as lower loop in func() is highly parallel 
   for(int i=0; i < oFuncVec->vec.size(); i++) {
-    ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
+    ObjFcn<float, FcnOfInterest<float> > *oFunc = oFuncVec->vec[i];
     if(oFunc->devID >= 0) continue; 
     
     err += oFunc->func();
@@ -184,7 +184,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
     for(int i=0; i < oFuncVec->nParam; i++) grad[i]=0;
     
     for(int i=0; i < oFuncVec->vec.size(); i++) {
-      ObjFcn<float, generatedFcnInterest<float> > *oFunc = oFuncVec->vec[i];
+      ObjFcn<float, FcnOfInterest<float> > *oFunc = oFuncVec->vec[i];
       oFunc->gen_grad(grad,x);
     }
     oFuncVec->timeGrad += getTime() - startTime;

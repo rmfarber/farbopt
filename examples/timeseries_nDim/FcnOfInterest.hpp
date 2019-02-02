@@ -1,6 +1,11 @@
 #ifndef FCN_OF_INTEREST_HPP
 #define FCN_OF_INTEREST_HPP
+
+#ifdef USE_GRAD
 #include <adolc/adolc.h>
+#endif
+
+#include "FcnOfInterest_config.h"
 #include "Functions_ANN.hpp"
 
 #ifndef FCN_ATTRIBUTES
@@ -38,7 +43,7 @@
 			)						\
 								)
 template<typename REAL_T>
-struct generatedFcnInterest {
+struct FcnOfInterest {
   FCN_ATTRIBUTES
   inline uint32_t nInput() {return N_INPUT;}
   FCN_ATTRIBUTES
@@ -107,11 +112,13 @@ struct generatedFcnInterest {
     return generic_fcn<false,REAL_T>(p, I, const_cast< REAL_T *>(Known));
   }
 
+#ifdef USE_GRAD
   FCN_ATTRIBUTES
   inline adouble CalcErr(const adouble *p, const adouble *I, const adouble *Known)
   {
     return generic_fcn<false,adouble>(p, I, const_cast< adouble *>(Known));
   }
+#endif
 };
 #endif
 

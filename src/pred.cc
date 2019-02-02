@@ -15,7 +15,7 @@ private:
   vector<float> param;
   PredFcn();
 public:
-  generatedFcnInterest<float> fi;
+  FcnOfInterest<float> fi;
   PredFcn(const char * paramFile) { loadParam(paramFile); }
   PredFcn(const string &paramFile) { loadParam(paramFile.c_str()); }
   void loadParam(const char * filename)
