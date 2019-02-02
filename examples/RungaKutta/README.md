@@ -15,6 +15,11 @@ This also builds a Python callable method as shown in viewPredict.py
 
 The python method genVanDerPol.py generates the train.dat data.
 
+NOTE: You need to add the adolc library to your path to run:
+source ../ADD_ADOLC
+
+You only need to do this once.
+
 The viewPredict.py uses the python method to use the rhs() in the standard
 Python odeint() method. You can see the stable limit cycle on the screen.
 

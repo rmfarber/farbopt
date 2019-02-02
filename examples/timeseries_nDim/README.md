@@ -1,4 +1,11 @@
-build the codes
+NOTE: You need to add the adolc library to your path to run:
+source ../ADD_ADOLC
+
+You only need to do this once.
+
+# Build the codes
+make
+
 # generate the data
 sh HOST_GEN_TRAIN 
 

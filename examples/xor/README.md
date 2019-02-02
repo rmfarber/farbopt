@@ -1,5 +1,10 @@
 This is a simple XOR example.
 
+NOTE: You need to add the adolc library to your path to run:
+source ../ADD_ADOLC
+
+You only need to do this once.
+
 To run and verify the results type:
 make
 sh TEST.sh
