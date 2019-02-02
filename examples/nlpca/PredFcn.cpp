@@ -37,7 +37,7 @@ void PredFcn::loadParam(const char * filename)
 
 PredFcn::PredFcn(const char *s)
 {
-  std::cout << "reading params from " << s << std::endl;
+  //std::cout << "reading params from " << s << std::endl;
   loadParam(s);
 }
 
