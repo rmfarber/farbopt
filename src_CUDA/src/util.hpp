@@ -91,7 +91,7 @@ public:
   // checkpoint every interval of runtime
   void setCheckPointInterval(int interval_seconds)
   {
-    if(interval_seconds < 0) throw "invalid interval_seconds specified";
+    if(interval_seconds < 0) throw std::runtime_error("invalid interval_seconds specified");
 #ifdef USE_MPI
     if(getMPI_rank() == 0) { // master
       checkpointInterval = interval_seconds;
@@ -203,12 +203,12 @@ public:
       // read the data
       for(int exIndex=0; exIndex < myExamples; exIndex++) {
 	for(int i=0; i < nInput; i++) {
-	  ret=fread(& oFunc->InputExample(exIndex,i),1, sizeof(REAL_T), fn);
-	  if(ret != sizeof(REAL_T)) throw "data read failed";
+	  ret=fread(& oFunc->InputExample(exIndex,i),sizeof(REAL_T), 1, fn);
+	  if(ret != 1) throw std::runtime_error("data read failed: Input");
 	}
 	for(int i=0; i < nOutput; i++)  {
-	  ret=fread(& oFunc->KnownExample(exIndex,i),1, sizeof(REAL_T), fn);
-	  if(ret != sizeof(REAL_T)) throw "data read failed";
+	  ret=fread(& oFunc->KnownExample(exIndex,i), sizeof(REAL_T), 1, fn);
+	  if(ret != 1) throw std::runtime_error("data read failed: Output");
 	}
       }
       int dev = examplesPerDevice[i].first;
@@ -283,7 +283,7 @@ extern "C" double nloptFunc(unsigned int n, const double *x,
     cudaSetDevice(oFunc->devID);
     launchObjKernel<<<nBlocks, oFunc->warpSize>>>(oFunc->d_oFunc);
 
-    if(cudaError() != cudaSuccess) throw "func failed";
+    if(cudaError() != cudaSuccess) throw std::runtime_error("func failed");
   }
 
   // RUN on host if needed (possibly one task per thread)
@@ -391,7 +391,7 @@ int readParam(const char* filename, int nParam, float* param)
     exit(1);
   }
   ret=fread(param,sizeof(float), nParam, fn);
-  //if(ret != sizeof(float)) throw "parameter read failed";
+  //if(ret != sizeof(float)) throw std::runtime_error("parameter read failed");
 
   return 0;
 }
@@ -407,9 +407,9 @@ void writeParam(const char *filename, int nParam, float *x)
   int ret;
 
   ret=fwrite(&nParam,sizeof(uint32_t), 1, fn);
-  if(ret != 1) throw "parameter write failed";
+  if(ret != 1) throw std::runtime_error("parameter write failed");
   ret=fwrite(x,sizeof(float), nParam, fn);
-  if(ret != nParam) throw "parameter write failed";
+  if(ret != nParam) throw std::runtime_error("parameter write failed");
   fclose(fn);
 }
 
