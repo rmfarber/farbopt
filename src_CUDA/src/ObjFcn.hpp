@@ -206,12 +206,11 @@ FCN_ATTRIBUTES
     if(threadIdx.x < WARP_SIZE)
       ssum[threadIdx.x] = 0.;
     
-    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
     const float *I = *Input.getDataPtrAddr();
     const float *K = *Known.getDataPtrAddr();
     register double partial=0.;
     while(tid < Input.rows() ) {
-      partial += fi.CalcOpt(param, &I[tid*N_INPUT], &K[tid*nOutput]); 
+      partial += fi.CalcOpt(param, &I[tid* fi.nInput()], &K[tid* fi.nOutput()]); 
       //partial += fi.CalcOpt(tid, param, &Input, &Known); 
       //double d=fi.CalcOpt(tid, param, &Input, &Known); 
       //partial += d*d;
@@ -244,7 +243,6 @@ __host__
   inline double func()
   {
     uint32_t nExamples = Input.rows();
-    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
     const float *I = *Input.getDataPtrAddr();
     const float *K = *Known.getDataPtrAddr();
     
@@ -254,7 +252,7 @@ __host__
 #pragma omp parallel for reduction(+:err)
 #pragma vector aligned
     for(int i=0; i < nExamples; ++i) {
-      err += fi.CalcOpt(param, &I[i*N_INPUT], &K[i*nOutput]); 
+      err += fi.CalcOpt(param, &I[i* fi.nInput()], &K[i* fi.nOutput()]); 
     }
     return err/nExamples;
   }
@@ -304,7 +302,7 @@ __host__
 	  for(int i=0; i < nInput; i++, index++) newData[index] = Input(ex,i);
 	  for(int i=0; i < nOutput; i++, index++) newData[index] = Known(ex,i);
 	  set_param_vec(tag,nInput+nOutput,newData);
-	  if(gradient(tag, N_PARAM, param, adolGrad) < 0) {
+	  if(gradient(tag, fi.nParam(), param, adolGrad) < 0) {
 	    fprintf(stderr,"symbolic gradient failure on conditional branch\n");
 	    throw "conditional branch in adolc gradient";
 	  }
@@ -322,7 +320,6 @@ __host__
   inline void pred(Matrix<REAL_T> *Output)
   {
     uint32_t nExamples = Input.rows();
-    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
     assert(nExamples > 0);
     assert(Input.rows() == Output->rows() );
 
@@ -331,7 +328,7 @@ __host__
 
 #pragma omp parallel for 
     for(int i=0; i < nExamples; ++i) {
-      fi.CalcOutput(param, &I[i*N_INPUT], &O[i*nOutput]); 
+      fi.CalcOutput(param, &I[i* fi.nInput()], &O[i* fi.nOutput()]); 
     }
   }
 

@@ -578,14 +578,14 @@ void fini(const char * paramFilename,
   printf("\tAveObjTime %g, countObjFunc %d, totalObjTime %g\n",
 	 averageTimeObjFunc, oFuncVec->nFunctionCalls,
 	 oFuncVec->timeObjFunction);
-#ifdef FLOP_ESTIMATE
-  printf("\tEstimated Flops myFunc %d,average GFlop/s %g nFuncCalls %d\n",
-	 nFlops, (totalFlops/averageTimeObjFunc/1.e9), 
-	 oFuncVec->nFunctionCalls);
-  printf("\tEstimated maximum GFlop/s %g, minimum GFLop/s %g\n",
-	 (totalFlops/(oFuncVec->minTime)/1.e9),
-	 (totalFlops/(oFuncVec->maxTime)/1.e9) );
-#endif
+  if(nFlops) {
+    printf("\tEstimated Flops myFunc %d,average GFlop/s %g nFuncCalls %d\n",
+	   nFlops, (totalFlops/averageTimeObjFunc/1.e9), 
+	   oFuncVec->nFunctionCalls);
+    printf("\tEstimated maximum GFlop/s %g, minimum GFLop/s %g\n",
+	   (totalFlops/(oFuncVec->minTime)/1.e9),
+	   (totalFlops/(oFuncVec->maxTime)/1.e9) );
+  }
 #ifdef USE_GRAD
   if(oFuncVec->nGradCalls > 0) {
     printf("\tAveGradTime %g, nGradCalls %d, totalGradTime %g\n",

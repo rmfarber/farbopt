@@ -12,46 +12,54 @@
 #define FCN_ATTRIBUTES
 #endif
 
-// convenience to use DIM from from common.sh
-// edit DEFINE_INPUTSIZE.sh to change
-#include "InputSize.h"
+template<typename REAL_T, int FI_N_INPUT=N_INPUT, int FI_N_OUTPUT=(N_OUTPUT==0)?N_INPUT:N_OUTPUT>
+class FcnOfInterest {
+private:
+  uint32_t nparam;
+public:
+  uint32_t nflop;
 
-//#define N_INPUT 16
-#define N_H1 (10)
-#define N_H2 (10)
-#define N_OUTPUT (1)
-#define N_PARAM (					\
-		 (0					\
-		  + AllLayer_Init<N_H1>::nparam()	\
-		  + FromAll2all<N_INPUT, N_H1>::nparam()	\
-		  + AllLayer_G<N_H1, GFCN>::nparam()	\
-		  + AllLayer_Init<N_H2>::nparam()	\
-		  + FromAll2all<N_H1, N_H2>::nparam()	\
-		  + AllLayer_G<N_H2, GFCN>::nparam()		\
-		  + (N_OUTPUT*AllLayer2neuron<N_H2>::nparam())	\
-		  )						\
-							)
-#define FLOP_ESTIMATE (						\
-		       (0					\
-			+ AllLayer_Init<N_H1>::nflop()		\
-			+ FromAll2all<N_INPUT, N_H1>::nflop()	\
-			+ AllLayer_G<N_H1, GFCN>::nflop()	\
-			+ AllLayer_Init<N_H2>::nflop()		\
-			+ FromAll2all<N_H1, N_H2>::nflop()		\
-			+ AllLayer_G<N_H2, GFCN>::nflop()		\
-			+ 1 + 3*N_OUTPUT*AllLayer2neuron<N_H2>::nflop()	\
-			)						\
-								)
-template<typename REAL_T>
-struct FcnOfInterest {
   FCN_ATTRIBUTES
-  inline uint32_t nInput() {return N_INPUT;}
+  inline uint32_t nInput() {return FI_N_INPUT;}
+
   FCN_ATTRIBUTES
-  inline uint32_t nOutput() {return N_OUTPUT;}
+  inline uint32_t nOutput() {return FI_N_OUTPUT;}
+
+  // do one fcn evaluation to set the nparameters
   FCN_ATTRIBUTES
-  inline uint32_t nParam() { return N_PARAM; }
+  void bootstrap(int guess_nparam ) {
+    float *guess_param=new float[guess_nparam];
+    for(int i=0; i < guess_nparam; i++) guess_param[i] = 0.f;
+    float *I=new float[nInput()];
+    for(int i=0; i < nInput(); i++) I[i] = 0.f;
+    generic_fcn<false,float>(guess_param, I, NULL);
+    delete [] guess_param;
+    delete [] I;
+  }
+
   FCN_ATTRIBUTES
-  inline uint32_t nFlop() {return FLOP_ESTIMATE;}
+  FcnOfInterest() {
+    nparam=nflop=0;
+    bootstrap(1000000);
+
+    nflop =
+      (0	
+       + AllLayer_Init<N_H1>::nflop()
+       + FromAll2all<N_INPUT, N_H1>::nflop()
+       + AllLayer_G<N_H1, GFCN>::nflop()
+       + AllLayer_Init<N_H2>::nflop()
+       + FromAll2all<N_H1, N_H2>::nflop()
+       + AllLayer_G<N_H2, GFCN>::nflop()
+       + 1 + 3*N_OUTPUT*AllLayer2neuron<N_H2>::nflop()
+       );
+  }
+
+  FCN_ATTRIBUTES
+  inline const uint32_t nParam() { return nparam; }
+
+  FCN_ATTRIBUTES
+  inline uint32_t nFlop() {return nflop;}
+
   FCN_ATTRIBUTES 
   // really hate the following. Fix using preprocessor later.
   inline const char* name() {
@@ -96,6 +104,10 @@ struct FcnOfInterest {
       if(IS_PRED == true) { pred[to] = o;
       } else { o -= pred[to]; sum += o*o; }
     }
+
+    // for bootstrap
+    if(nparam == 0) nparam=index;
+    
     return(sum);
   }
   

@@ -140,7 +140,6 @@ FCN_ATTRIBUTES
   inline double func()
   {
     const uint32_t nExamples = Input.rows();
-    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
     const float *I = *Input.getDataPtrAddr();
     const float *K = *Known.getDataPtrAddr();
     
@@ -149,7 +148,7 @@ FCN_ATTRIBUTES
     double err=0.;
 #pragma omp parallel for reduction(+:err)
     for(int i=0; i < nExamples; ++i) {
-      err += fi.CalcOpt(param, &I[i*N_INPUT], &K[i*nOutput]); 
+      err += fi.CalcOpt(param, &I[i* fi.nInput()], &K[i*fi.nOutput()]); 
     }
     return err/nExamples;
   }
@@ -158,7 +157,6 @@ FCN_ATTRIBUTES
   inline void pred(Matrix<REAL_T> *Output)
   {
     const uint32_t nExamples = Input.rows();
-    const uint32_t nOutput = (N_OUTPUT==0)?N_INPUT:N_OUTPUT; //special case autoencoders
     assert(nExamples > 0);
     assert(Input.rows() == Output->rows() );
 
@@ -167,7 +165,7 @@ FCN_ATTRIBUTES
 
 #pragma omp parallel for 
     for(int i=0; i < nExamples; ++i) {
-      fi.CalcOutput(param, &I[i*N_INPUT], &O[i*nOutput]); 
+      fi.CalcOutput(param, &I[i* fi.nInput()], &O[i* fi.nOutput()]); 
     }
   }
 
@@ -216,7 +214,7 @@ FCN_ATTRIBUTES
 	  for(int i=0; i < nInput; i++, index++) newData[index] = Input(ex,i);
 	  for(int i=0; i < nOutput; i++, index++) newData[index] = Known(ex,i);
 	  set_param_vec(tag,nInput+nOutput,newData);
-	  if(gradient(tag, N_PARAM, param, adolGrad) < 0) {
+	  if(gradient(tag, fi.nParam(), param, adolGrad) < 0) {
 	    fprintf(stderr,"symbolic gradient failure on conditional branch\n");
 	    throw "conditional branch in adolc gradient";
 	  }

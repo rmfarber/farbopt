@@ -13,28 +13,7 @@
 #define N_H1 (5)
 #define N_H2 (5)
 #define N_OUTPUT (2)
-#define N_PARAM (					\
-		 (0					\
-		  + AllLayer_Init<N_H1>::nparam()	\
-		  + FromAll2all<N_INPUT, N_H1>::nparam()	\
-		  + AllLayer_G<N_H1, GFCN>::nparam()	\
-		  + AllLayer_Init<N_H2>::nparam()	\
-		  + FromAll2all<N_H1, N_H2>::nparam()	\
-		  + AllLayer_G<N_H2, GFCN>::nparam()		\
-		  + (N_OUTPUT*AllLayer2neuron<N_H2>::nparam())	\
-		  )						\
-							)
-#define FLOP_ESTIMATE (						\
-		       (0					\
-			+ AllLayer_Init<N_H1>::nflop()		\
-			+ FromAll2all<N_INPUT, N_H1>::nflop()	\
-			+ AllLayer_G<N_H1, GFCN>::nflop()	\
-			+ AllLayer_Init<N_H2>::nflop()		\
-			+ FromAll2all<N_H1, N_H2>::nflop()		\
-			+ AllLayer_G<N_H2, GFCN>::nflop()		\
-			+ 1 + 3*N_OUTPUT*AllLayer2neuron<N_H2>::nflop()	\
-			)						\
-								)
+
 #ifndef RK4_H
 #define RK4_H 0.1
 #endif
@@ -42,16 +21,52 @@
 #define RK4_RECURRENCE_LOOPS 5
 #endif
 
-template<typename REAL_T>
-struct FcnOfInterest {
+template<typename REAL_T, int FI_N_INPUT=N_INPUT, int FI_N_OUTPUT=(N_OUTPUT==0)?N_INPUT:N_OUTPUT>
+class FcnOfInterest {
+private:
+  uint32_t nparam;
+  uint32_t nflop;
+  
+public:
+  // do one fcn evaluation to set the nparameters
   FCN_ATTRIBUTES
-  inline uint32_t nInput() {return N_INPUT;}
+  void bootstrap(int guess_nparam ) {
+    float *guess_param=new float[guess_nparam];
+    for(int i=0; i < guess_nparam; i++) guess_param[i] = 0.f;
+    float *I=new float[nInput()];
+    for(uint32_t i=0; i < nInput(); i++) I[i] = 0.f;
+    generic_fcn<false,float>(guess_param, I, NULL);
+    delete [] guess_param;
+    delete [] I;
+  }
+
   FCN_ATTRIBUTES
-  inline uint32_t nOutput() {return N_OUTPUT;}
+  FcnOfInterest() {
+    nparam=nflop=0;
+    bootstrap(1000000);
+    nflop = (0
+	     + AllLayer_Init<N_H1>::nflop()
+	     + FromAll2all<N_INPUT, N_H1>::nflop()
+	     + AllLayer_G<N_H1, GFCN>::nflop()
+	     + AllLayer_Init<N_H2>::nflop()
+	     + FromAll2all<N_H1, N_H2>::nflop()
+	     + AllLayer_G<N_H2, GFCN>::nflop()
+	     + 1 + 3*N_OUTPUT*AllLayer2neuron<N_H2>::nflop()
+	     );
+  }
+
   FCN_ATTRIBUTES
-  inline uint32_t nParam() { return N_PARAM; }
+  inline uint32_t nInput() {return FI_N_INPUT;}
+
   FCN_ATTRIBUTES
-  inline uint32_t nFlop() {return FLOP_ESTIMATE;}
+  inline uint32_t nOutput() {return FI_N_OUTPUT;}
+
+  FCN_ATTRIBUTES
+  inline uint32_t nParam() { return nparam; }
+
+  FCN_ATTRIBUTES
+  inline uint32_t nFlop() {return nflop;}
+
   FCN_ATTRIBUTES 
   // really hate the following. Fix using preprocessor later.
   inline const char* name() {
@@ -95,6 +110,7 @@ struct FcnOfInterest {
       index += AllLayer2neuron<N_H2>::nparam();
       pred[to] = o;
     }
+    if(nparam==0) nparam = index;
   }
 
 #ifdef EXPLICIT_RK4
@@ -103,7 +119,6 @@ struct FcnOfInterest {
   inline T generic_fcn(const T *p, const T *I, T *pred)
   {
     // Implement a 2D 4th Order Runga Kutta
-    register int index=0;
     T h=RK4_H;
     T k1[2],k2[2],k3[2],k4[2], x[2];
     // from Python code

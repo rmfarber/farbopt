@@ -11,8 +11,6 @@ http://docs.cython.org/src/userguide/wrapping_CPlusPlus.html
 #define PREDFCN generic_fcn
 #endif
 
-
-
 using namespace farbopt;
 
 void PredFcn::loadParam(const char * filename)
@@ -20,15 +18,16 @@ void PredFcn::loadParam(const char * filename)
   FILE *fn=fopen(filename,"r");
   if(!fn) throw std::runtime_error("Cannot open file");
   
-  int parmInFile;
-  int ret;
+  uint32_t parmInFile;
+  uint32_t ret;
   
   ret=fread(&parmInFile,sizeof(uint32_t), 1, fn);
   if(ret != 1) throw std::runtime_error("header read failure in parameter file");
   
+  //std::cout << "ParamInFile " << parmInFile << std::endl;
+  //std::cerr << "ParamInFile " << parmInFile << std::endl;
   if(parmInFile != fi.nParam()) {
-    if(ret != fi.nParam())
-      throw std::runtime_error("Incorrect number of parameters in file");
+    throw std::runtime_error("Incorrect number of parameters in file");
   }
   param.reserve(fi.nParam());
   ret=fread(&param[0],sizeof(float), fi.nParam(), fn);
@@ -53,5 +52,4 @@ std::vector< float > PredFcn::predict(std::vector< float > input)
   
   fi.PREDFCN<true,float>(&param[0],&input[0], &output[0]);
   return output;
-  
 }
