@@ -32,7 +32,7 @@ public:
     for(int i=0; i < guess_nparam; i++) guess_param[i] = 0.f;
     float *I=new float[nInput()];
     for(int i=0; i < nInput(); i++) I[i] = 0.f;
-    generic_fcn<false,float>(guess_param, I, NULL);
+    generic_fcn<false,float>(guess_param, I, I);
     delete [] guess_param;
     delete [] I;
   }
