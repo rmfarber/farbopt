@@ -390,11 +390,11 @@ ObjFuncVec<REAL_T, myFcnInterest >* init( const char* datafile,
     for(int exIndex=0; exIndex < myExamples; exIndex++) {
       for(int i=0; i < nInput; i++) {
 	ret=fread(& oFunc->InputExample(exIndex,i),sizeof(REAL_T), 1, fn);
-	if(ret != 1) throw std::runtime_error("data read failed");
+	if(ret != 1) throw std::runtime_error("data read failed: Input");
       }
       for(int i=0; i < nOutput; i++)  {
 	ret=fread(& oFunc->KnownExample(exIndex,i),sizeof(REAL_T), 1, fn);
-	if(ret != 1) throw std::runtime_error("data read failed");
+	if(ret != 1) throw std::runtime_error("data read failed: Output");
       }
     }
 #ifdef DEBUG_DATA_PARTITIONING
