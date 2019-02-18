@@ -189,4 +189,30 @@ template<int LEN_LAYER, typename Functor> class AllLayer_G {
 #endif
 };
 
+// Softmax
+template<typename T, int LEN> class Softmax {
+public:
+  FCN_ATTRIBUTES
+  inline static const char *name()  { return "softmax()"; }
+  FCN_ATTRIBUTES
+  inline static int nparam() { return(0);} 
+  FCN_ATTRIBUTES
+  inline static int nflop() { return(1+LEN*2+7*LEN);} 
+  FCN_ATTRIBUTES
+  inline static void fcn(float *x) {
+    T sum=0.;
+#pragma simd reduction(+:sum)
+    for(int i=0; i < LEN; i++) sum += x[i] = expf(x[i]);
+    for(int i=0; i < LEN; i++) x[i] /= sum;
+  } 
+#ifdef USE_GRAD
+  FCN_ATTRIBUTES
+  inline static void fcn(adouble *x) {
+    adouble sum=0.;
+    for(int i=0; i < LEN; i++) sum += x[i] = exp(x[i]);
+    for(int i=0; i < LEN; i++) x[i] /= sum;
+  }
+#endif
+};
+
 #endif
