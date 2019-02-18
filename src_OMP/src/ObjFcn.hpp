@@ -216,7 +216,7 @@ FCN_ATTRIBUTES
 	  set_param_vec(tag,nInput+nOutput,newData);
 	  if(gradient(tag, fi.nParam(), param, adolGrad) < 0) {
 	    fprintf(stderr,"symbolic gradient failure on conditional branch\n");
-	    throw "conditional branch in adolc gradient";
+	    throw std::runtime_error("conditional branch in adolc gradient");
 	  }
 	  for(int i=0; i < fi.nParam(); i++) grad[i] += adolGrad[i];
 	}
