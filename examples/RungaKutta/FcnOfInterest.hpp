@@ -35,7 +35,7 @@ public:
     for(int i=0; i < guess_nparam; i++) guess_param[i] = 0.f;
     float *I=new float[nInput()];
     for(uint32_t i=0; i < nInput(); i++) I[i] = 0.f;
-    generic_fcn<false,float>(guess_param, I, I);
+    generic_fcn<false,float>(guess_param, I, NULL);
     delete [] guess_param;
     delete [] I;
   }
@@ -166,7 +166,8 @@ public:
     T h=RK4_H;
     T t1[2],t2[2],Yn_1[2];
     
-    rhs<IS_PRED, T>(p, I, Yn_1);
+    //rhs<IS_PRED, T>(p, I, Yn_1);
+    for(int i=0; i < N_INPUT; i++) Yn_1[i] = I[i];
     rhs<IS_PRED, T>(p, I, t1); // this never changes!
     for(int i=0; i < RK4_RECURRENCE_LOOPS; i++) {
       //Yn_1[1] += h; // advance to the Yn_1 state
