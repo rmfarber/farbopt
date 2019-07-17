@@ -1,5 +1,5 @@
 include ./make.inc
-include ../common/make.inc
+include $(ARCH_DIR)/common/make.inc
 
 TARGETS= nloptTrain.x pred.x genMackeyGlass.x genScale.x doScale.x
 MPI_TARGETS= mpiNloptTrain.x

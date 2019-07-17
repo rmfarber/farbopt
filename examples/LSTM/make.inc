@@ -1,6 +1,6 @@
 #change ARCH_DIR to build outside of the source tree
-#ARCH_DIR=$(HOME)/new/farbopt/src_CUDA
-
+#don't forget to first make allclean
+#ARCH_DIR=$(HOME)/farbopt/src_OMP
 ARCH_DIR=..
 
-CXXFLAGS = -g
+CXXFLAGS = -O3
