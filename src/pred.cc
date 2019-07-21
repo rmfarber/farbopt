@@ -7,7 +7,6 @@ using namespace std;
 
 #ifndef PREDFCN
 #define PREDFCN generic_fcn
-#define STANDARD_HAVE_KNOWNS
 #endif
 
 class PredFcn {
@@ -32,7 +31,7 @@ public:
     if(parmInFile != fi.nParam()) {
       if(ret != fi.nParam()) throw runtime_error("Incorrect number of parameters in file");
     }
-    param.reserve(fi.nParam());
+    param.resize(fi.nParam());
     ret=fread(&param[0],sizeof(float), fi.nParam(), fn);
     if(ret != fi.nParam()) throw runtime_error("parameter read failed");
   }
@@ -134,12 +133,12 @@ int main(int argc, char* argv[])
     if(ret != 1) throw runtime_error("datafile read failed");
     
     vector<float> I, Known,O;
-    I.reserve(nInput);
-    O.reserve(nInput);
-    Known.reserve(nOutput);
+    I.resize(nInput);
+    O.resize(nInput);
+    Known.resize(nOutput);
 
-    if(nOutput == 0) O.reserve(nInput);
-    else O.reserve(nOutput);
+    if(nOutput == 0) O.resize(nInput);
+    else O.resize(nOutput);
 
     for(;;) {
       ret=fread(&I[0],sizeof(float), nInput, fn);
@@ -155,20 +154,20 @@ int main(int argc, char* argv[])
 	cout << "pred";
 	for(int j=0; j < nInput; j++) cout << ", " << O[j];
 	cout << ", known"; 
-#ifdef STANDARD_HAVE_KNOWNS
-	for(int j=0; j < nInput; j++) cout << ", " << I[j];
-#else
+#ifdef DONT_HAVE_KNOWNS
 	for(int j=0; j < nInput; j++) cout << ", " << 0.;
+#else
+	for(int j=0; j < nInput; j++) cout << ", " << I[j];
 #endif
 	cout << endl;
       } else {
 	cout << "pred"; 
 	for(int j=0; j < nOutput; j++) cout << ", " << O[j];
 	cout << ", known"; 
-#ifdef STANDARD_HAVE_KNOWNS
-	for(int j=0; j < nOutput; j++) cout << ", " << Known[j];
-#else
+#ifdef DONT_HAVE_KNOWNS
 	for(int j=0; j < nOutput; j++) cout << ", " << 0.;
+#else
+	for(int j=0; j < nOutput; j++) cout << ", " << Known[j];
 #endif
 	cout << endl;
       }
