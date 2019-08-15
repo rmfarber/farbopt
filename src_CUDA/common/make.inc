@@ -1,5 +1,7 @@
 CXX=nvcc
 CXXFLAGS += -w -Xcompiler="-fopenmp -finline-limit=100000000 " -std=c++11 
+CXXFLAGS += -gencode arch=compute_30,code=sm_30
+CXXFLAGS += -gencode arch=compute_35,code=sm_35
 CXXFLAGS += -gencode arch=compute_52,code=sm_52
 CXXFLAGS += -gencode arch=compute_53,code=sm_53
 CXXFLAGS += -gencode arch=compute_60,code=sm_60
