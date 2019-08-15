@@ -119,7 +119,7 @@ public:
   
 #pragma omp declare simd
   FCN_ATTRIBUTES
-  inline float CalcOpt(const float *p, const REAL_T *I, const REAL_T *Known)
+  inline float CalcOpt(const float * __restrict__ p, const REAL_T * __restrict__ I, const REAL_T * __restrict__ Known)
   {
     return generic_fcn<false,REAL_T>(p, I, const_cast< REAL_T *>(Known));
   }
